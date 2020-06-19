@@ -34,6 +34,7 @@
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://d3js.org/topojson.v2.min.js"></script>
 <script type="text/javascript" src="helpers.js"></script>
+<script type="text/javascript" src="plots.js"></script>
 <script type="text/javascript" src="data.json"></script>
 <script type="text/javascript" src="states-albers-10m.json"></script>
 
@@ -49,10 +50,10 @@
         <div class="gutter left"></div>
         <div class="gutter right"></div>
         <div class="navbar">
-            <div class="button button-1">Overview</div>
-            <div class="button button-2"></div>
-            <div class="button button-3"></div>
-            <div class="button button-4"></div>
+            <div class="button button-1">Office</div>
+            <div class="button button-2">Product/<br>Service</div>
+            <div class="button button-3">Start<br>Date</div>
+            <div class="button button-4">End<br>Date</div>
         </div>
         <div class = "row1">
                 <div class="r1c1"></div>
@@ -63,6 +64,7 @@
 
         <div class="box3" id="box3"></div>
         <div class="box4" id="box4"></div>
+        <div id="tooltip" class="hidden"></div>
     </div>
 
     <script>
@@ -70,7 +72,7 @@
         width = 750;
         height = 600;
 
-        var margin = {top: 20, right: 10, bottom: 20, left: 70};
+        var margin = {top: 20, right: 10, bottom: 20, left: 20};
         w = width-margin.left-margin.right;
         h = height-margin.top-margin.bottom;
 
@@ -115,18 +117,13 @@
         var stateDim = ndx.dimension(d => d.placeOfPerformanceState);
         var stateGroup = stateDim.group().reduceSum(d=>d.obligatedAmount);
 
-        var margin = {top: 20, right: 10, bottom: 20, left: 70};
+        var margin = {top: 30, right: 20, bottom: 20, left: 20};
 
         //tableAgPlot("#box4", deptGroup.top(10), ['Department','Obligations'], orgs);
         //barPlot("#box1", deptGroup);
         
         //plotCard('.r1c1',totalobs(),'Total Obligations');
 
-        var vals = ["Total Obligations", ".r1c1", totalobs()];
-
-
-
-        //const r1c1 = wrapper(plotCard, ".r1c1", totalobs(), "Total Obligations");
 
 
         //var r1c1 = plotCard.bind(null, ".r1c1", totalobs(), "Total Obligations");
@@ -134,8 +131,9 @@
         var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
         var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
         //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());
-        var box3 = plotTreemap.bind(null, "#box3",visnGroup.all(), visnDim);
-        var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
+        var box3 = plotTreemap.bind(null, "#box3",visnGroup.all(), visnDim, "Obligations by Office");
+        //var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
+        var box4 = stateMap.bind(null, ".box4",[us], stateGroup.all());
 
         var test;
 
@@ -145,7 +143,7 @@
             ".r1c2": r1c2,
             ".r1c3": r1c3,
             ".box3": box3,
-            //".box4": box4
+            ".box4": box4
         }
             
         Object.keys(pg1).forEach(function (func) {
@@ -153,10 +151,13 @@
           pg1[func](); 
         });
 
+        var b3 = {"selector": ".box3", "data": visnGroup.all()};
+        barPlot(b3);
+
 
     
 
-            stateMap(".box4",[us], stateGroup.all());
+            
 
        
         

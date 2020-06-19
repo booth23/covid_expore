@@ -1,5 +1,5 @@
 
-  function mousemove(selection) {
+  function mousemove(selection="#tooltip") {
     var t = d3.event.pageY || 0;
     var l = d3.event.pageX || 0;
     d3.select(selection)
@@ -10,19 +10,24 @@
 };
 
   
-function mouseout(selection) {
+function mouseout(selection="#tooltip") {
   d3.select(selection)
     .attr("class", "hidden")
     .html("");
 };
 
-function mouseover(selection, d) {
+function mouseover(d, {...args}={}) {
+  var {labels={}, selection="#tooltip"} = args;
+  //console.log(args);
   d3.select(selection)
-  .html(d.key + "<br/>"  + formatDollar(d.value))
+  .html((labels[d.key] || d.key) + "<br/>"  + formatDollar(d.value))
   .attr("class", "tooltip");
   };
 
-function plotTreemap(selector, data, dim, pg=pg1, width=1000, height=500) {
+
+/////////////////////////////////////////////////////  
+
+function plotTreemap(selector, data, dim, caption='', pg=pg1, width=1000, height=500) {
 
   d3.select(selector).selectAll("svg").remove();
   d3.select(selector).selectAll("table").remove();
@@ -33,14 +38,25 @@ function plotTreemap(selector, data, dim, pg=pg1, width=1000, height=500) {
   var color = d3.scaleOrdinal(d3.schemeCategory10);
 
   
-  var svg = d3.select(selector)
+  var container = d3.select(selector)
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .attr("id","tm")
-  .append("g")
+    //.text("blah")
+    ;
+
+  container.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", margin.top/2 + 5)
+    .attr("class", "caption")  
+    .text(caption);
+  
+  var svg = container.append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
+
+  
 
   var tooltip = d3.select("body").append("div")
                   .attr("class","hidden")
@@ -123,18 +139,24 @@ function plotTreemap(selector, data, dim, pg=pg1, width=1000, height=500) {
     .append("text")
       .attr("x", function(d){ return d.x0+5})    // +10 to adjust position (more right)
       .attr("y", function(d){ return Math.max(d.y0,0)+20})    // +20 to adjust position (lower)
-      .text(d => deptShort[d.data.key])
+      .text(d => orgs[d.data.key])
       .attr("font-size", "12px")
       .attr("fill", "white")
-      //.call(wrap, 40)
+     
       .style("opacity", function(d) {
+        //console.log(orgs[d.data.key] + ": " + (d.x1 - d.x0));
         
-        if((d.x1 - d.x0) >= 50) {
+        if((d.x1 - d.x0) >= 150) {
+          
+
           return 1; // show text
         } else {
           return 0; // don't show text
         }
-      });
+      })
+      ;
+
+
 
 
 
@@ -247,6 +269,8 @@ function plotCard(selector, val, title) {
 
 function stateMap(selector, data, gdata, height=900, width=900) {
 
+  d3.select(selector).selectAll("svg").remove();
+
   var path = d3.geoPath()
       .projection(scale(.85))
   ;
@@ -271,7 +295,8 @@ function stateMap(selector, data, gdata, height=900, width=900) {
       .attr("fill", d => color(stLu[d.properties.name.toUpperCase()]))
       .attr("d", path)
       .append("title")
-      .text(d => d.properties.name + " - " + formatDollar(stLu[d.properties.name.toUpperCase()]));
+      .text(d => d.properties.name + " - " + formatDollar(stLu[d.properties.name.toUpperCase()]))
+      ;
 
 
   };
@@ -630,22 +655,13 @@ function linePlot(selector, data, caption="", h=400) {
 
 function hbarPlot(selector,data,title,dim) {
 
+  var margin = {top: 20, right: 10, bottom: 20, left: 40};
+
   d3.select(selector).selectAll("svg").remove();
   d3.select(selector).selectAll("table").remove();
-  d3.select("#hbardiv").selectAll("div").remove();
-
-    var tooltip = d3.select("body").append("div")
-    .attr("class","hidden")
-    .attr("id","hbardiv")
-    ;
-
-    function mouseover(d) {
-    tooltip
-    .html(d.key + "<br/>"  + formatDollar(d.value))
-    .attr("class", "tooltip");
-    };
 
 
+    
       var width = 400 - margin.left - margin.right,
       height = 300 - margin.top - margin.bottom;
 
@@ -692,8 +708,8 @@ function hbarPlot(selector,data,title,dim) {
       .attr("fill", "steelblue")
       .attr("width", d => x(Math.max(d.value,0)))
       .on("mouseover", d => mouseover(d))  
-      .on("mousemove", d => mousemove("#hbardiv"))		
-      .on("mouseout", d => mouseout("#hbardiv"))
+      .on("mousemove", d => mousemove())		
+      .on("mouseout", d => mouseout())
       .on("click", function(d) {
         var t = d3.select(this);
         if (t.attr("fill") == "steelblue"){
@@ -721,55 +737,12 @@ function hbarPlot(selector,data,title,dim) {
 };
 
 
-function barPlot(selector, data, title="Title") {
-  // set x scale - this is the category
-  var xscale = d3.scaleBand()
-      .domain(data.map(d => d.key))
-      .range([0,500]);
-
-  // set y scale - equal to the highest value
-  var yscale = d3.scaleLinear()
-      .domain([0, d3.max(data, d=>d.value)])
-      .range([h, 0]);
-
-  // append svg using height and width
-  var chart = d3.select(selector)
-      .append("svg")
-          .attr("width", width)
-          .attr("height", height)
-      .append("g")
-          .attr("transform", "translate(" + 75 + ",20)")
-          ;
-
-  // add rectangles for each category
-  var bars = chart.selectAll("rect")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("height", d=> h - Math.max(yscale(d.value),0))
-      .attr("width","40")
-      .attr("x", d=>xscale(d.key))
-      .attr("y", d=>yscale(d.value))
-      .attr("fill", "steelblue")
-      ;
-
-  chart.append("g")
-      .attr("transform", "translate(0," + (h) + ")")
-      .call(d3.axisBottom(xscale))
-      ;
-
-  // create y axis
-  var y_axis = d3.axisLeft()
-      .scale(yscale);
-
-  // add y axis to figure.
-  chart.append("g")
-      .call(y_axis);
-
-};
 
 
-function bubblePlot(selector, data, w=500, h=500) {
+
+function bubblePlot(vals) {
+  
+  
 
   d3.select(selector).selectAll("svg").remove();
   d3.select(selector).selectAll("table").remove();
