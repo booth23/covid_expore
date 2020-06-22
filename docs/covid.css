@@ -135,26 +135,39 @@ grid-column: 4 / 5;
     margin: 25px 0;
     font-size: 0.9rem;
     min-width: 400px;
-    
     border-radius: 10px;
-    overflow: hidden;
+    
+}
+
+.content-table thead {    
+    
 }
 
 .content-table thead tr {
-    background-color: #151E3D;
-    color: #fff;
-    text-align: left;
+    background-color: steelblue;
+    color: #fff;    
     font-weight: bold;
+    display:block;
     
 }
 
 .content-table th,
 .content-table td {
+    display: table-cell;
     padding: 12px 15px;
+    text-align: left;
+}
+
+.content-table tbody {
+    display:block;
+    overflow:auto;
+    height: 400px;
+    
 }
 
 .content-table tbody tr {
-    border-bottom: 1px solid #151E3D;
+    border-bottom: 1px solid steelblue;
+    
 }
 
 .content-table tbody tr:nth-of-type(even) {

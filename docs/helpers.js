@@ -24,6 +24,29 @@ function mouseover(d, {...args}={}) {
   .attr("class", "tooltip");
   };
 
+//"Wk of Apr 13"
+function weekDate(dt) {
+  var mo = dt.slice(6,9); 
+  var dy = +dt.slice(10,12);
+  return new Date(2020, mos.indexOf(mo), dy);
+}
+
+function sortWeek(a,b) {
+
+  if (weekDate(a.key) > weekDate(b.key)) {
+    return 1;
+  } else {
+      return -1;
+  }
+}
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////  
 
@@ -467,27 +490,29 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}) {
 
  
 ///////////////////////////////////////////////////
-function tablePlot(selector, data, fields, lu=Null) {
+function tablePlot(selector, data, fields, lu=null) {
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
 
-    var table = d3.select(selector).append("table");
+    var table = d3.select(selector)
+      .append("table")
+      .attr("class","content-table");
 
     var header = table.append("thead").append("tr");
 
-    var cols = []
-    if(lu) {
-      cols = fields.map(d=>lu[d]);
-    } else {
-      cols = fields;
-    }
+//    var cols = []
+//    if(lu) {
+//      cols = fields.map(d=>lu[d]);
+//    } else {
+//      cols = fields;
+//    }
 
     header
       .selectAll("th")
-      .data(cols)
+      .data(fields)
       .enter()
       .append("th")
-      .text(d => d);
+      .text(d => lu[d]);
 
     var tablebody = table.append("tbody");
 
@@ -500,12 +525,12 @@ function tablePlot(selector, data, fields, lu=Null) {
     var cells = rows.selectAll("td")
       .data(function (row) {
             return fields.map(function (field) {
-                return { column: name, value: row[column] };
+                return { name: field, value: row[field] };
             });
         })
         .enter()
         .append("td")
-        .attr('data-th', d=>d.name)
+        .attr('data-th', d=> d.name)
         .text(d => d.value);
 
 };

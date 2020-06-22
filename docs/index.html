@@ -23,12 +23,15 @@
     
 
     <!--
-       
+        
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter2/1.5.2/crossfilter.min.js"></script>
         
 
 -->
 
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
@@ -77,6 +80,7 @@
         h = height-margin.top-margin.bottom;
 
         var months = {"01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06":"Jun"};
+        var mos = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
         var deptShort = {"7500": "HHS",
             "7000": "DHS",
@@ -117,6 +121,10 @@
         var stateDim = ndx.dimension(d => d.placeOfPerformanceState);
         var stateGroup = stateDim.group().reduceSum(d=>d.obligatedAmount);
 
+        var dateDim = ndx.dimension(d => d.signedDate);
+        var dateGroup = dateDim.group().reduceSum(d=>d.obligatedAmount);
+
+
         var margin = {top: 30, right: 20, bottom: 20, left: 20};
 
         //tableAgPlot("#box4", deptGroup.top(10), ['Department','Obligations'], orgs);
@@ -135,8 +143,7 @@
         //var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
         var box4 = stateMap.bind(null, ".box4",[us], stateGroup.all());
 
-        var test;
-
+        
         //const pg1 = [r1c1, r1c2, r1c3, box3];
         var pg1 = {
             ".r1c1": r1c1,
@@ -151,9 +158,11 @@
           pg1[func](); 
         });
 
-        var b3 = {"selector": ".box3", "data": visnGroup.all()};
-        barPlot(b3);
+        var b3 = {"selector": ".box3", "data": dateGroup.all()};
+        barPlot(".box3", weeklyGroup.all().sort(sortWeek), {"title": "Obligations over Time"});
 
+        //tablePlot(".box3", dailyDim.top(Infinity), ["PIID","competed","covidAmount"], 
+        //    {"PIID": "Contract", "competed": "Competition", "covidAmount": "Obligations"});
 
     
 
