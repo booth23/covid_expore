@@ -44,7 +44,16 @@
     
     
 
-    
+    <!--
+                <div class="navbar">
+            <div class="button button-1">Office</div>
+            <div class="button button-2">Product/<br>Service</div>
+            <div class="button button-3">Start<br>Date</div>
+            <div class="button button-4">End<br>Date</div>
+        </div>
+
+
+    -->
     
     
 
@@ -52,20 +61,29 @@
         <div class="header"><h1>COVID-19 Contracting</h1></div>
         <div class="gutter left"></div>
         <div class="gutter right"></div>
-        <div class="navbar">
-            <div class="button button-1">Office</div>
-            <div class="button button-2">Product/<br>Service</div>
-            <div class="button button-3">Start<br>Date</div>
-            <div class="button button-4">End<br>Date</div>
-        </div>
+
         <div class = "row1">
                 <div class="r1c1"></div>
                 <div class="r1c2"></div>
-                <div class="r1c3"></div>
+        </div>
 
+        
+
+        <div class="row2">
+            <div class="prose">VA's obligations peaked in late March/early April and have declined since then. 
+                This is really just to show that we can intersperse text with the graphics.
+            </div>
         </div>
 
         <div class="box3" id="box3"></div>
+        <div class="row3">
+            <div class="b3"></div>
+        </div>
+        <div class="box5">
+            <div class="b5a"></div>
+            <div class="b5b"></div>
+        </div>
+
         <div class="box4" id="box4"></div>
         <div id="tooltip" class="hidden"></div>
     </div>
@@ -82,27 +100,12 @@
         var months = {"01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06":"Jun"};
         var mos = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-        var deptShort = {"7500": "HHS",
-            "7000": "DHS",
-            "9700": "DOD",
-            "3600": "VA",
-            "8900": "Energy",
-            "1200": "Agriculture",
-            7300: "SBA",
-            "7300": "SBA",
-            "1900": "State",
-            "1500": "Justice",
-            "2000": "Treasury",
-            "1300": "Commerce",
-            7200: "USAID",
-            "4700": "GSA"
+        var sortAscending = false;
 
-        }
-
-        // set up crossfilter
+        
         var ndx = crossfilter(dataSet);
         
-        // we need a dimension and a group for each thing we want to filter on.
+        
         var compDim = ndx.dimension(d=>d.competed || "NA");
         var compGroup = compDim.group().reduceSum(d=>d.obligatedAmount);
 
@@ -124,6 +127,12 @@
         var dateDim = ndx.dimension(d => d.signedDate);
         var dateGroup = dateDim.group().reduceSum(d=>d.obligatedAmount);
 
+        var pscDim = ndx.dimension(d => d.productOrServiceCode);
+        var pscGroup = pscDim.group().reduceSum(d=>d.obligatedAmount);
+
+        var vendorDim = ndx.dimension(d => d.vendorName);
+        var vendorGroup = vendorDim.group().reduceSum(d=>d.obligatedAmount);
+
 
         var margin = {top: 30, right: 20, bottom: 20, left: 20};
 
@@ -135,60 +144,49 @@
 
 
         //var r1c1 = plotCard.bind(null, ".r1c1", totalobs(), "Total Obligations");
-        var r1c1 = plotTotalObs.bind(null);
-        var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
-        var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
+        //function r1c1 = plotTotalObs.bind(null);
+        //var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
+        function r1c2() {barPlot(".r1c2", weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, {h:300})};
+        //var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
         //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());
-        var box3 = plotTreemap.bind(null, "#box3",visnGroup.all(), visnDim, "Obligations by Office");
+        function box3() {plotTreemap("#box3",visnGroup.all(), visnDim, "Obligations by Office")};
         //var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
-        var box4 = stateMap.bind(null, ".box4",[us], stateGroup.all());
+        function box4() {stateMap(".box4",[us], stateGroup.all())};
+        //var b5a = tablePlot.bind(null, ".b5a", pscGroup.top(10), "value"), ["key","value"])
+        function b5a() {tableAgPlot(".b5a", pscGroup.top(10), labels=['Product/Service','Obligations'], lu=codes, {"rowFilter":pscDim})};
+        function b5b() {tableAgPlot(".b5b", vendorGroup.top(10), labels=['Contractor','Obligations'])};
+        function b3() {tablePlot(".b3", colSort(dailyDim.top(Infinity), "covidAmount"), ["PIID","competed","coSizeDetermination","contractPricing","covidAmount"], 
+            {"lu": colLu, "rowUrl": "k_url"});};
 
-        
+        var colLu = {"PIID": "Contract", 
+                    "competed": "Competition", 
+                    "covidAmount": "Obligations",
+                    "coSizeDetermination": "Company Size",
+                    "contractPricing": "Contract Pricing"};
         //const pg1 = [r1c1, r1c2, r1c3, box3];
         var pg1 = {
-            ".r1c1": r1c1,
+            ".r1c1": plotTotalObs,
             ".r1c2": r1c2,
-            ".r1c3": r1c3,
+            //".r1c3": r1c3,
             ".box3": box3,
-            ".box4": box4
+            ".box4": box4,
+            '.b5a': b5a,
+            '.b5b': b5b,
+            '.b3': b3
         }
             
-        Object.keys(pg1).forEach(function (func) {
-          
-          pg1[func](); 
-        });
 
-        var b3 = {"selector": ".box3", "data": dateGroup.all()};
-        barPlot(".box3", weeklyGroup.all().sort(sortWeek), {"title": "Obligations over Time"});
+        renderAll();
 
-        //tablePlot(".box3", dailyDim.top(Infinity), ["PIID","competed","covidAmount"], 
-        //    {"PIID": "Contract", "competed": "Competition", "covidAmount": "Obligations"});
-
-    
-
-            
-
-       
+        
         
 
+    
         //linePlot("#box3",weeklyGroup.all());
         //bubblePlot("#box3",deptGroup.all());
         //plotTreemap("#box3",deptGroup.all());
 
 
-        
-
-        
-
-
-
-        
-
-        
-    
-
-    
-    
     
     </script>
 

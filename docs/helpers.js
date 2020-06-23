@@ -40,6 +40,53 @@ function sortWeek(a,b) {
   }
 }
 
+function sortMonth(a,b) {
+
+  if (mos.indexOf(a.key) > mos.indexOf(b.key)) {
+    return 1;
+  } else {
+      return -1;
+  }
+}
+
+function colSort(data, col) {
+  if (sortAscending) {
+      sortAscending = false;
+      return data.sort(function(a, b) {
+        v1 = +a[col] || a[col];
+        v2 = +b[col] || b[col];
+        
+        if (v1 > v2) {
+            return 1
+        } else {
+            return -1
+        }
+      });
+  } else {
+        sortAscending = true;
+        return data.sort(function(a, b) {
+            v1 = +a[col] || a[col];
+            v2 = +b[col] || b[col];
+            
+            if (v1 < v2) {
+                return 1
+            } else {
+                return -1
+            }
+        
+        });
+
+  }
+}
+
+
+function renderAll(skip=null) {
+  Object.keys(pg1).forEach(function (func) {
+    if (func !== skip) {
+      pg1[func]();
+    }
+  });
+}
 
 
 
@@ -454,13 +501,18 @@ function pieChart (selector, data, dim, title="", pg=pg1) {
 
 //////////////////////////////////////////////////////////////////////
  
-function tableAgPlot(selector, data, labels=['Key','Value'], lu={}) {
-    var w = +d3.select(selector).style('width').slice(0, -2);
+function tableAgPlot(selector, data, labels=['Key','Value'], lu={}, {...args}={}) {
+
+    d3.select(selector).selectAll("table").remove();
+    //var w = +d3.select(selector).style('width').slice(0, -2);
+
+    var {w=450, rowUrl=null, rowFilter=null} = args;
     
 
     var table = d3.select(selector)
       .append("table")
-      .attr("class","content-table");
+      .style("width", w)
+      .attr("class","agtable");
        
     var header = table.append("thead").append("tr");
  
@@ -469,6 +521,13 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}) {
       .data(labels)
       .enter()
       .append("th")
+      .attr("width", function(d, i) {
+        if(i==0) {
+          return "70%"
+        } else {
+          return "30%"
+        }
+      })
       .text(function(d) { return d; });
  
     var tablebody = table.append("tbody");
@@ -477,7 +536,25 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}) {
       .selectAll("tr")
       .data(data)
       .enter()
-      .append("tr");
+      .append("tr")
+      .on("click", function(d) {
+        if(rowFilter) {
+            t = d3.select(this)
+            if (t.attr("class") == "selected_row"){
+              t.attr("class","")
+              rowFilter.filterAll();
+              
+              renderAll(selector);
+              
+            } else {
+              t.attr("class","selected_row");
+              rowFilter.filter(d.key);
+              renderAll(selector);
+            };
+            
+          };
+        
+        if(rowUrl) {window.open(d[rowUrl])}});
 
     var cells = rows.selectAll("td")
         .data(d => Object.values(d))
@@ -489,51 +566,7 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}) {
   };
 
  
-///////////////////////////////////////////////////
-function tablePlot(selector, data, fields, lu=null) {
-    d3.select(selector).selectAll("svg").remove();
-    d3.select(selector).selectAll("table").remove();
 
-    var table = d3.select(selector)
-      .append("table")
-      .attr("class","content-table");
-
-    var header = table.append("thead").append("tr");
-
-//    var cols = []
-//    if(lu) {
-//      cols = fields.map(d=>lu[d]);
-//    } else {
-//      cols = fields;
-//    }
-
-    header
-      .selectAll("th")
-      .data(fields)
-      .enter()
-      .append("th")
-      .text(d => lu[d]);
-
-    var tablebody = table.append("tbody");
-
-    rows = tablebody
-      .selectAll("tr")
-      .data(data)
-      .enter()
-      .append("tr");
-
-    var cells = rows.selectAll("td")
-      .data(function (row) {
-            return fields.map(function (field) {
-                return { name: field, value: row[field] };
-            });
-        })
-        .enter()
-        .append("td")
-        .attr('data-th', d=> d.name)
-        .text(d => d.value);
-
-};
 
 //////////////////////////////////////////////////////
 function week(dt) {
