@@ -25,7 +25,8 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
     var svg = d3.select(selector)
         .append("svg")
             .attr("width", w + margin.right + margin.left + xspace)
-            .attr("height", h + margin.top + margin.right + titlespace);
+            .attr("height", h + margin.top + margin.right + titlespace)
+            .style("background-color", "white");
 
     var chart = svg.append("g")
             .attr("transform", "translate(" + (margin.left + xspace) + "," + (margin.top+titlespace) + ")")
@@ -70,7 +71,9 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
         chart.append("g")
             .attr("transform", "translate(" + (0) + "," + h + ")")
             .call(d3.axisBottom(xscale)
-                .tickValues(""));
+                //.ticks(8)
+                .tickValues(xscale.domain().filter(function(d,i){ return !(i%3)})))
+                ;
     };
 
   
@@ -91,10 +94,29 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
         .text(title)
         ;
 
-    var periods = ["Daily","Weekly","Monthly"];
+    var periods = ["Weekly","Monthly"];
 
-    var menu = svg.append("g")
-        .attr("transform", d => "translate(" + margin.left + "," + (margin.top + titlespace) + ")");
+    
+    //var totalvals = ["Total:", formatDollar(d3.sum(data,d => d.value))];
+    var totalvals = ["Total:", formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value())];
+    
+
+    var total = svg.append("g")
+      .attr("transform", d => "translate(" + margin.left + "," + (margin.top + titlespace) + ")");
+      
+    total.selectAll("text")
+      .data(totalvals)
+      .enter()
+      .append("text")
+      .attr("x", 0)
+      .attr("y", d => totalvals.indexOf(d)*25)
+      .style('fill', 'steelblue')
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text(d=>d);
+
+      var menu = svg.append("g")
+      .attr("transform", d => "translate(" + margin.left + "," + (margin.top + titlespace + 75) + ")");
 
 
     menu.selectAll("rect")
@@ -107,9 +129,7 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
         .style("fill", "steelblue")
         .style("border-radius","5px")
         .on("click", function(d){
-            if(d=="Daily") {
-                barPlot(selector, dailyGroup.all(), "Obligations by Day", dateDim, vals);
-            } else if (d=="Weekly") {
+            if (d=="Weekly") {
                 barPlot(selector, weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, vals);
             } else {
                 //barPlot(selector, reorder(monthGroup.all(), Object.values(months)), vals);

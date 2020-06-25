@@ -292,9 +292,11 @@ function totalobs(){
   return formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value());
 };
 
-function plotTotalObs() {
+function plotTotalObs(selector) {
   var val = totalobs();
-  plotCard(".r1c1", val, "Total Obligations");
+  d3.select(selector)
+    .html("<b>Total Obligations</b><br>"+val);
+ 
 }
 
 ///////////////////////////////////////////////////
@@ -375,23 +377,26 @@ function stateMap(selector, data, gdata, height=900, width=900) {
 ////////////////////////////////////////////////////
 
 
-function pieChart (selector, data, dim, title="", pg=pg1) {
+function pieChart (selector, data, dim, title="") {
 
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
 
     w = 400;
+    h = 400;
     var size = w * .9;
-    var fourth = size / 4;
-    var half = size / 2;
+    var fourth = w / 4;
+    var half = w / 2;
     var labelOffset = fourth * 1.4;
     var total = data.reduce((acc, cur) => acc + cur.value, 0);
     
    
     var chart = d3.select(selector)
       .append('svg')
-      .attr('width', w)
-      .attr('viewBox', `0 0 ${size} ${size}`)
+      .attr('width', w + margin.left + margin.right)
+      .attr("height", h)
+      .style("background-color", "white")
+      //.attr('viewBox', `0 0 ${size} ${size}`)
       ;
 
     const plotArea = chart.append('g')
@@ -428,19 +433,11 @@ function pieChart (selector, data, dim, title="", pg=pg1) {
         if (t.attr("fill") !== "grey"){
           t.attr("fill","grey")
           dim.filter(d.data.key);
-          Object.keys(pg).forEach(function (func) {
-            if(func!==selector) {
-              pg[func]();
-            }  
-          });
+          renderAll(selector);
         } else {
           t.attr("fill",d => color(d.data.key));
           dim.filterAll();
-          Object.keys(pg).forEach(function (func) {
-            if(func!==selector) {
-              pg[func]();
-            }  
-          });
+          renderAll(selector);
           
 
       }});
@@ -468,11 +465,10 @@ function pieChart (selector, data, dim, title="", pg=pg1) {
       .text(d => `${formatDollar(d.data.value/1000000)}M (${Math.round(d.data.value / total * 100)}%)`);
 
     chart.append("text")
-      .attr("x", 10)            
-      .attr("y", 0 - (margin.top / 2))
+      .attr("x", (w+margin.left+margin.right)/2)            
+      .attr("y", margin.top)
       .attr("text-anchor", "middle") 
-      .style("font-size", "12px")
-      //.style("text-decoration", "underline") 
+      .style("font-size", "16px")
       .text(title)
 
     // Add one dot in the legend for each name.
@@ -480,8 +476,8 @@ function pieChart (selector, data, dim, title="", pg=pg1) {
     .data(arcs)
     .enter()
     .append("circle")
-      .attr("cx", 20)
-      .attr("cy", function(d,i){ return 20 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
+      .attr("cx", w-margin.right-margin.left-10)
+      .attr("cy", function(d,i){ return h - 82 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
       .attr("r", 7)
       .style("fill", d=>color(d.data.key));
 
@@ -490,8 +486,8 @@ function pieChart (selector, data, dim, title="", pg=pg1) {
     .data(arcs)
     .enter()
     .append("text")
-      .attr("x", 30)
-      .attr("y", function(d,i){ return 22 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
+      .attr("x", w-margin.right-margin.left)
+      .attr("y", function(d,i){ return h - 80 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
       .style("fill", d=>color(d.data.key))
       .text(d=>d.data.key)
       .attr("text-anchor", "left")
@@ -711,7 +707,9 @@ function linePlot(selector, data, caption="", h=400) {
 
 //////////////////////////////////////////////////////////
 
-function hbarPlot(selector,data,title,dim) {
+function hbarPlot(selector, data, dim, title, {...args}={}) {
+
+  var {w=400, h=300, lu={}} = args;
 
   var margin = {top: 20, right: 10, bottom: 20, left: 40};
 
@@ -720,8 +718,8 @@ function hbarPlot(selector,data,title,dim) {
 
 
     
-      var width = 400 - margin.left - margin.right,
-      height = 300 - margin.top - margin.bottom;
+      var width = w - margin.left - margin.right,
+      height = h - margin.top - margin.bottom;
 
     var barheight = 25;
 
@@ -729,6 +727,7 @@ function hbarPlot(selector,data,title,dim) {
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+      .style("background-color","white")
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -745,10 +744,12 @@ function hbarPlot(selector,data,title,dim) {
 
     var y = d3.scaleBand()
       .domain(data.map(d => d.key))
-      .range([0,height]);
+      .range([0,height])
+      .paddingInner(0.1);
 
     var y_axis = d3.axisLeft()
-      .scale(y);
+      .scale(y)
+      .tickFormat(d => lu[d] || d);
 
     chart.append("g")
         .call(y_axis);
@@ -773,19 +774,11 @@ function hbarPlot(selector,data,title,dim) {
         if (t.attr("fill") == "steelblue"){
           t.attr("fill","red")
           dim.filter(d.key);
-          Object.keys(pg1).forEach(function (func) {
-            if(func!==selector) {
-              pg1[func]();
-            }  
-          });
+          renderAll(selector);
         } else {
           t.attr("fill","steelblue");
           dim.filterAll();
-          Object.keys(pg1).forEach(function (func) {
-            if(func!==selector) {
-              pg1[func]();
-            }  
-          });
+          renderAll(selector);
         };
         
       })

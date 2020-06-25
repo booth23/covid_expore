@@ -52,41 +52,53 @@
             <div class="button button-4">End<br>Date</div>
         </div>
 
+            <div class="row1a card"></div>
+            <div class="row1b prose">VA's obligations spiked in late March/early April and have been
+                relatively flat since then.</div>
+            <div class="row1c"></div>
 
+            <div class="row2text prose">Approximately two-thirds of VA's obligations were for 
+                    contracts that were not competed. This is somewhat surprising given that months 
+                    of the obligations were for products.
+                </div>
     -->
     
     
 
     <div class="wrapper">
         <div class="header"><h1>COVID-19 Contracting</h1></div>
-        <div class="gutter left"></div>
-        <div class="gutter right"></div>
 
-        <div class = "row1">
-                <div class="r1c1"></div>
-                <div class="r1c2"></div>
+        <div class="row1"></div>
+
+        <div class="row1a prose">VA's obligations spiked in late March/early April and have been
+            relatively flat since then.</div>
+       
+
+        <div class="row2"> </div>
+
+        <div class="row3"></div>
+
+        <div class="row3a prose">VA has a relatively low competition rate given that the majority
+            of its obligations are for products.
         </div>
 
-        
-
-        <div class="row2">
-            <div class="prose">VA's obligations peaked in late March/early April and have declined since then. 
-                This is really just to show that we can intersperse text with the graphics.
-            </div>
+        <div class="row4">
+            <div class="row4menu button">Menu</div>
+            <div class="row4table"></div>
         </div>
+        <div class="row5"></div>
 
-        <div class="box3" id="box3"></div>
-        <div class="row3">
-            <div class="b3"></div>
-        </div>
-        <div class="box5">
-            <div class="b5a"></div>
-            <div class="b5b"></div>
-        </div>
-
-        <div class="box4" id="box4"></div>
         <div id="tooltip" class="hidden"></div>
+
+            
+            
+    <!-- close wrapper -->
     </div>
+
+        <!--
+
+
+    -->
 
     <script>
 
@@ -115,23 +127,19 @@
         var monthDim = ndx.dimension(d => months[d.signedDate.substr(5,2)]);
         var monthGroup = monthDim.group().reduceSum(d=>d.obligatedAmount);
 
-        var dailyDim = ndx.dimension(d => d.signedDate.substr(0,10));
-        var dailyGroup = dailyDim.group().reduceSum(d=>d.obligatedAmount);
-
         var weeklyDim = ndx.dimension(d => getMonday(d.signedDate));
         var weeklyGroup = weeklyDim.group().reduceSum(d=>d.obligatedAmount);
 
         var stateDim = ndx.dimension(d => d.placeOfPerformanceState);
         var stateGroup = stateDim.group().reduceSum(d=>d.obligatedAmount);
 
-        var dateDim = ndx.dimension(d => d.signedDate);
-        var dateGroup = dateDim.group().reduceSum(d=>d.obligatedAmount);
+        var pvsDim = ndx.dimension(d => d.productOrService);
+        var pvsGroup = pvsDim.group().reduceSum(d=>d.obligatedAmount);
+
 
         var pscDim = ndx.dimension(d => d.productOrServiceCode);
         var pscGroup = pscDim.group().reduceSum(d=>d.obligatedAmount);
 
-        var vendorDim = ndx.dimension(d => d.vendorName);
-        var vendorGroup = vendorDim.group().reduceSum(d=>d.obligatedAmount);
 
 
         var margin = {top: 30, right: 20, bottom: 20, left: 20};
@@ -146,33 +154,35 @@
         //var r1c1 = plotCard.bind(null, ".r1c1", totalobs(), "Total Obligations");
         //function r1c1 = plotTotalObs.bind(null);
         //var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
-        function r1c2() {barPlot(".r1c2", weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, {h:300})};
+        //function row1() {plotTotalObs(".row1")}
+        function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, {h:300})};
+        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations")};
+        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services")};
+        function row4table() {tableAgPlot(".row4table", visnGroup.top(10), labels=['Office','Obligations'], lu=orgs, {"rowFilter":visnDim})};
+        function row5() {stateMap(".row5",[us], stateGroup.all())};
         //var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
         //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());
-        function box3() {plotTreemap("#box3",visnGroup.all(), visnDim, "Obligations by Office")};
+        //function row4() {plotTreemap("#box3",visnGroup.top(10), visnDim, "Obligations by Office")};
         //var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
-        function box4() {stateMap(".box4",[us], stateGroup.all())};
+        //function box4() {stateMap(".box4",[us], stateGroup.all())};
         //var b5a = tablePlot.bind(null, ".b5a", pscGroup.top(10), "value"), ["key","value"])
-        function b5a() {tableAgPlot(".b5a", pscGroup.top(10), labels=['Product/Service','Obligations'], lu=codes, {"rowFilter":pscDim})};
-        function b5b() {tableAgPlot(".b5b", vendorGroup.top(10), labels=['Contractor','Obligations'])};
-        function b3() {tablePlot(".b3", colSort(dailyDim.top(Infinity), "covidAmount"), ["PIID","competed","coSizeDetermination","contractPricing","covidAmount"], 
-            {"lu": colLu, "rowUrl": "k_url"});};
+        //function b5a() {tableAgPlot(".b5a", pscGroup.top(10), labels=['Product/Service','Obligations'], lu=codes, {"rowFilter":pscDim})};
+        //function b5b() {tableAgPlot(".b5b", vendorGroup.top(10), labels=['Contractor','Obligations'])};
+        //function b3() {tablePlot(".b3", colSort(dailyDim.top(Infinity), "covidAmount"), ["PIID","competed","coSizeDetermination","contractPricing","covidAmount"], 
+        //    {"lu": colLu, "rowUrl": "k_url"});};
 
         var colLu = {"PIID": "Contract", 
                     "competed": "Competition", 
                     "covidAmount": "Obligations",
                     "coSizeDetermination": "Company Size",
                     "contractPricing": "Contract Pricing"};
-        //const pg1 = [r1c1, r1c2, r1c3, box3];
+
         var pg1 = {
-            ".r1c1": plotTotalObs,
-            ".r1c2": r1c2,
-            //".r1c3": r1c3,
-            ".box3": box3,
-            ".box4": box4,
-            '.b5a': b5a,
-            '.b5b': b5b,
-            '.b3': b3
+            ".row1": row1,
+            ".row2": row2,
+            ".row3": row3,
+            ".row4table": row4table,
+            ".row5": row5
         }
             
 
