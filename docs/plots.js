@@ -1,7 +1,15 @@
-function barPlot(selector, data, title="", dim, {...vals}={}) {
+function barPlot(selector, data, dim, {...vals}={}) {
 
 
-    var {xspace = 200, w=500, h=500, titlespace=30} = vals;
+    var {xspace = 200, 
+        w=500, 
+        h=500, 
+        titlespace=50,
+        title1 = '',
+        title2 = ''} = vals;
+
+    var width = w + margin.right + margin.left + xspace;
+    var height = h + margin.top + margin.bottom + titlespace + 10;
 
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
@@ -24,12 +32,13 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
     // append svg using height and width
     var svg = d3.select(selector)
         .append("svg")
-            .attr("width", w + margin.right + margin.left + xspace)
-            .attr("height", h + margin.top + margin.right + titlespace)
-            .style("background-color", "white");
+            .attr("width", width)
+            .attr("height", height)
+            .style("background-color", "white")
+            .style("border","3px solid black");
 
     var chart = svg.append("g")
-            .attr("transform", "translate(" + (margin.left + xspace) + "," + (margin.top+titlespace) + ")")
+            .attr("transform", "translate(" + (margin.left + xspace) + "," + (margin.top + titlespace) + ")")
             ;
   
     // add rectangles for each category
@@ -66,10 +75,12 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
     if (data.length < 10) {
         chart.append("g")
             .attr("transform", "translate(" + (0) + "," + h + ")")
+            .attr("class", "axis")
             .call(d3.axisBottom(xscale));
     } else {
         chart.append("g")
             .attr("transform", "translate(" + (0) + "," + h + ")")
+            .attr("class", "axis")
             .call(d3.axisBottom(xscale)
                 //.ticks(8)
                 .tickValues(xscale.domain().filter(function(d,i){ return !(i%3)})))
@@ -85,14 +96,23 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
   
     // add y axis to figure.
     chart.append("g")
+        .attr("class", "axis")
         .call(y_axis);
 
-    chart.append("text")
-        .attr("x", w/2)             
-        .attr("y", 0-margin.top)
-        .attr("class", "caption")
-        .text(title)
+    svg.append("text")
+        .attr("x", width/2)             
+        .attr("y", margin.top)
+        .attr("class", "figtitle")
+        .text(title1)
         ;
+
+    svg.append("text")
+        .attr("x", width/2)             
+        .attr("y", margin.top + 20)
+        .attr("class", "figtitle")
+        .text(title2)
+        ;
+
 
     var periods = ["Weekly","Monthly"];
 
@@ -152,7 +172,161 @@ function barPlot(selector, data, title="", dim, {...vals}={}) {
   
   };
 
+////////////     Pie Chart       /////////////////
+
+function pieChart (selector, dataraw, dim, title1="", title2="") {
+
+  d3.select(selector).selectAll("svg").remove();
+  d3.select(selector).selectAll("table").remove();
+
+  var data = dataraw.filter(d => d.value > 0)
+
+  w = 400;
+  h = 400;
+  var size = w * .9;
+  var fourth = w / 4;
+  var half = w / 2;
+  var labelOffset = fourth * 1.4;
+  var total = data.reduce((acc, cur) => acc + cur.value, 0);
   
+ 
+  var chart = d3.select(selector)
+    .append('svg')
+    .attr('width', w + margin.left + margin.right)
+    .attr("height", h)
+    .style("background-color", "white")
+    .style("border","3px solid black")
+    //.attr('viewBox', `0 0 ${size} ${size}`)
+    ;
+
+  const plotArea = chart.append('g')
+    .attr('transform', `translate(${half}, ${half})`);
+
+  const color = d3.scaleOrdinal()
+    .domain(data.map(d => d.key))
+    .range(d3.schemeCategory10);
+
+  const pie = d3.pie()
+    .sort(null)
+    .value(d => d.value);
+ 
+  const arcs = pie(data);
+
+  const arc = d3.arc()
+    .innerRadius(40)
+    .outerRadius(fourth)
+    ;
+ 
+  const arcLabel = d3.arc()
+    .innerRadius(labelOffset)
+    .outerRadius(labelOffset);
+
+  
+
+  plotArea.selectAll('path')
+    .data(arcs)
+    .enter()
+    .append('path')
+    .attr('fill', d => color(d.data.key))
+    .attr('stroke', 'white')
+    .attr('d', arc)
+    .on("click", function(d) {
+      var t = d3.select(this);
+      if (t.attr("fill") !== "grey"){
+        t.attr("fill","grey")
+        dim.filter(d.data.key);
+        renderAll(selector);
+      } else {
+        t.attr("fill",d => color(d.data.key));
+        dim.filterAll();
+        renderAll(selector);
+        
+
+    }});
+
+  const arcValue = d3.arc()
+    .innerRadius(fourth * .75)
+    .outerRadius(fourth * .75);
+
+  const values = plotArea.append("g")
+    .selectAll('text')
+    .data(arcs)
+    .enter()
+    .append('text')
+    .style('text-anchor', 'middle')
+    .style('alignment-baseline', 'middle')
+    .attr('transform', d => `translate(${arcValue.centroid(d)})`)
+    
+    ;
+
+    values.append('tspan')
+    .attr('y', -10)
+    .attr('x', 5)
+    .style('font-weight', 'bold')
+    .style("fill", "white")
+    .text(d => `${Math.round(d.data.value / total * 100)}%`)
+    
+
+  const labels = plotArea.append("g")
+    .selectAll('text')
+    .data(arcs)
+    .enter()
+    .append('text')
+    .attr("class", "axis")
+    .style('text-anchor', 'middle')
+    .style("font-size", "14px")
+    .style('alignment-baseline', 'middle')
+    .attr('transform', d => `translate(${arcLabel.centroid(d)})`);
+   
+
+  labels.append('tspan')
+    .attr('y', '-0.6em')
+    .attr('x', 0)
+    .style('font-weight', 'bold')
+    .text(d => `${d.data.key}`);
+
+  labels.append('tspan')
+    .attr('y', '0.6em')
+    .attr('x', 0)
+    .text(d => `${formatDollar(d.data.value/1000000)}M`);
+
+
+
+  chart.append("text")
+    .attr("x", (w+margin.left+margin.right)/2)            
+    .attr("y", margin.top)
+    .attr("class","figtitle")
+    .text(title1);
+
+  chart.append("text")
+    .attr("x", (w+margin.left+margin.right)/2)            
+    .attr("y", margin.top+20)
+    .attr("class","figtitle")
+    .text(title2);
+
+  
+  chart.selectAll("dots")
+  .data(arcs)
+  .enter()
+  .append("circle")
+    .attr("cx", w-margin.right-margin.left-10)
+    .attr("cy", function(d,i){ return h - 82 + i*20}) 
+    .attr("r", 7)
+    .style("fill", d=>color(d.data.key));
+
+  // Add the names.
+  chart.selectAll("labels")
+  .data(arcs)
+  .enter()
+  .append("text")
+    .attr("x", w-margin.right-margin.left)
+    .attr("y", function(d,i){ return h - 80 + i*20})
+    .style("fill", d=>color(d.data.key))
+    .text(d=>d.data.key)
+    .attr("text-anchor", "left")
+    .style("font-size", "14px")
+    .style("alignment-baseline", "middle");
+};
 
 
   //////////////////////////////////////////////////
@@ -220,3 +394,91 @@ function tablePlot(selector, data, fields, {...args}= {}) {
         .text(d => formatDollar(+d.value || d.value));
 
 };
+
+
+
+/////////////////////     VISN Map    /////////////////////
+function stateMap(selector, data, height=600, width=900) {
+
+  d3.select(selector).selectAll("svg").remove();
+
+
+  var features = visn.features;
+
+  var fixed = visn;
+  fixed['features'] = visn.features.map(function(feature) {
+    return turf.rewind(feature,{reverse:true});
+  });
+
+
+    
+
+  var projection = d3.geoAlbersUsa().fitExtent([[25,25],[width-25,height-25]], fixed);
+
+  var path = d3.geoPath()
+    .projection(projection)
+  ;
+
+
+  var stLu = arrayToObject(data);
+  
+
+  var visnlist = data.map(d=>d.key);
+
+    
+  
+  var color = d3.scaleOrdinal()
+      .domain(visnlist)
+      .range(d3.schemeCategory10.concat(d3.schemeAccent, d3.schemeDark2))
+      ;
+  
+  var svg = d3.select(selector)
+      .append("svg")
+      .attr("width",width)
+      .attr("height",height)
+      .style("border","3px solid black")
+      ;
+
+
+
+  svg.append("text")
+      .attr("x", (width+margin.left+margin.right)/2)            
+      .attr("y", margin.top)
+      .attr("class","figtitle")
+      .text("VISN Obligations");
+
+
+  svg.append("text")
+      .attr("x", (width+margin.left+margin.right)/2)            
+      .attr("y", margin.top+20)
+      .attr("class","figtitle")
+      .text("February 3 - July 13, 2020");
+
+
+  function mouseover(k) {
+        //console.log(args);
+        d3.select("#tooltip")
+        .html(k + "<br/>"  + formatDollar(stLu[k]))
+        .attr("class", "tooltip");
+        };
+
+  var visns = svg
+      .selectAll("path")
+      .data(fixed.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("fill",d=> color(d.properties.VISN))
+      .attr("stroke","black")
+      .attr("id",d=>d.properties.VISN)
+      .on("mouseover", d => mouseover(d.properties.VISN))  
+      .on("mousemove", d => mousemove())		
+      .on("mouseout", d => mouseout())
+      
+      //.append("title")
+      //.text(d => 'NCO ' + d.properties.VISN + " - " + formatDollar(stLu['NCO ' + d.properties.VISN]))
+      ;
+
+
+
+  };

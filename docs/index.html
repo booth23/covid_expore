@@ -9,7 +9,7 @@
     -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>VA COVID-19 Contracting Data</title>
+    <title>Contracting Data on VA COVID-19 Response Obligations</title>
     
     
     <link rel="stylesheet" href="covid.css">
@@ -36,10 +36,12 @@
 
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/5.1.6/turf.min.js"></script>
 <script type="text/javascript" src="helpers.js"></script>
 <script type="text/javascript" src="plots.js"></script>
 <script type="text/javascript" src="data.json"></script>
 <script type="text/javascript" src="states-albers-10m.json"></script>
+<script type="text/javascript" src="visn2.json"></script>
 
     
     
@@ -66,27 +68,38 @@
     
 
     <div class="wrapper">
-        <div class="header"><h1>COVID-19 Contracting</h1></div>
+        <div class="header">
+            <h1>Contracting Data on VA COVID-19 Response Obligations</h1>
+            <h2>February 3 - July 13, 2020</h2>
+        </div>
 
+        <div class="row note"><b>A National Interest Action code was created in the Federal Procurement Data 
+            System-Next Generation (FPDS-NG) on March 13, 2020. The visuals below were drawn from 
+            that data. The below visuals are meant to help illustrate, rather than replace, the FPDS-NG data.</b></div>
+
+        <div class="row5"></div>
+        
         <div class="row1"></div>
 
-        <div class="row1a prose">VA's obligations spiked in late March/early April and have been
-            relatively flat since then.</div>
+        <div class="row fignote">VA's obligations spiked in late March/early April and have been relatively flat since then.</div>
+
+        
        
 
         <div class="row2"> </div>
 
+        <div class="row fignote">Since February 3, 2020, approximately two-thirds of obligations were for non-competed contracts. </div>
+
         <div class="row3"></div>
 
-        <div class="row3a prose">VA has a relatively low competition rate given that the majority
+        <div class="row fignote">VA has a relatively low competition rate given that the majority
             of its obligations are for products.
         </div>
 
-        <div class="row4">
-            <div class="row4menu button">Menu</div>
-            <div class="row4table"></div>
-        </div>
-        <div class="row5"></div>
+        
+        <div class="row4table row"></div>
+       
+        
 
         <div id="tooltip" class="hidden"></div>
 
@@ -105,7 +118,7 @@
         width = 750;
         height = 600;
 
-        var margin = {top: 20, right: 10, bottom: 20, left: 20};
+        var margin = {top: 20, right: 10, bottom: 30, left: 20};
         w = width-margin.left-margin.right;
         h = height-margin.top-margin.bottom;
 
@@ -121,7 +134,7 @@
         var compDim = ndx.dimension(d=>d.competed || "NA");
         var compGroup = compDim.group().reduceSum(d=>d.obligatedAmount);
 
-        var visnDim = ndx.dimension(d=>d.contractingofficeid || "NA");
+        var visnDim = ndx.dimension(d=>orgs[d.contractingofficeid] || "NA");
         var visnGroup = visnDim.group().reduceSum(d=>d.obligatedAmount);
 
         var monthDim = ndx.dimension(d => months[d.signedDate.substr(5,2)]);
@@ -155,11 +168,14 @@
         //function r1c1 = plotTotalObs.bind(null);
         //var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
         //function row1() {plotTotalObs(".row1")}
-        function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, {h:300})};
-        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations")};
-        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services")};
-        function row4table() {tableAgPlot(".row4table", visnGroup.top(10), labels=['Office','Obligations'], lu=orgs, {"rowFilter":visnDim})};
-        function row5() {stateMap(".row5",[us], stateGroup.all())};
+        function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), weeklyDim, 
+            {h:300, 
+                title1:"Total Action Obligations by Week", 
+                title2:"Weeks of February 3-July 8, 2020"})};
+        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations", "February 3 - July 13, 2020")};
+        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services", "February 3 - July 13, 2020")};
+        function row4table() {tableAgPlot(".row4table", visnGroup.top(10), labels=['Office','Obligations'], lu=orgs, {"rowFilter":visnDim, title: 'Top Ten Offices'})};
+        function row5() {stateMap(".row5", visnGroup.all().filter(d => d.key.startsWith("NCO")))};
         //var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
         //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());
         //function row4() {plotTreemap("#box3",visnGroup.top(10), visnDim, "Obligations by Office")};

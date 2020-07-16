@@ -79,6 +79,12 @@ function colSort(data, col) {
   }
 }
 
+const arrayToObject = (array) =>
+    array.reduce((obj, item) => {
+        obj[item.key] = item.value
+        return obj
+    }, {});
+
 
 function renderAll(skip=null) {
   Object.keys(pg1).forEach(function (func) {
@@ -113,6 +119,7 @@ function plotTreemap(selector, data, dim, caption='', pg=pg1, width=1000, height
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .attr("id","tm")
+    .style("border","3px solid black")
     //.text("blah")
     ;
 
@@ -280,11 +287,7 @@ function scale (scaleFactor) {
 };
 
 
-const arrayToObject = (array) =>
-    array.reduce((obj, item) => {
-        obj[item.key] = item.value
-        return obj
-    }, {});
+
 
 
 function totalobs(){
@@ -315,6 +318,7 @@ function plotCard(selector, val, title) {
               .attr("width", w)
               .attr("height", h)
               .style("background-color", "steelblue")
+              .style("border","3px solid black")
             .append("g")
               .attr('transform', `translate(${0}, ${h/4})`)
                 ;
@@ -339,161 +343,13 @@ function plotCard(selector, val, title) {
 
 ////////////////////////////////////////////////////
 
-function stateMap(selector, data, gdata, height=900, width=900) {
 
-  d3.select(selector).selectAll("svg").remove();
-
-  var path = d3.geoPath()
-      .projection(scale(.85))
-  ;
-
-  var color = d3.scaleLinear()
-      .domain([0,d3.max(gdata.map(d => d.value))])
-      .range(['#C0C0C0', '#ff0000']);
-
-  var stLu = arrayToObject(gdata);
-  
-  var svg = d3.select(selector)
-      .append("svg")
-      .attr("width",width)
-      .attr("height",height);
-
-  svg.append("g")
-      .attr("transform", "translate(" + 0 + "," + 100 + ")")
-      .selectAll("path")
-      .data(topojson.feature(us, us.objects.states).features)
-      .enter()
-      .append("path")
-      .attr("fill", d => color(stLu[d.properties.name.toUpperCase()]))
-      .attr("d", path)
-      .append("title")
-      .text(d => d.properties.name + " - " + formatDollar(stLu[d.properties.name.toUpperCase()]))
-      ;
-
-
-  };
 
 
 ////////////////////////////////////////////////////
 
 
-function pieChart (selector, data, dim, title="") {
 
-    d3.select(selector).selectAll("svg").remove();
-    d3.select(selector).selectAll("table").remove();
-
-    w = 400;
-    h = 400;
-    var size = w * .9;
-    var fourth = w / 4;
-    var half = w / 2;
-    var labelOffset = fourth * 1.4;
-    var total = data.reduce((acc, cur) => acc + cur.value, 0);
-    
-   
-    var chart = d3.select(selector)
-      .append('svg')
-      .attr('width', w + margin.left + margin.right)
-      .attr("height", h)
-      .style("background-color", "white")
-      //.attr('viewBox', `0 0 ${size} ${size}`)
-      ;
-
-    const plotArea = chart.append('g')
-      .attr('transform', `translate(${half}, ${half})`);
-
-    const color = d3.scaleOrdinal()
-      .domain(data.map(d => d.key))
-      .range(d3.schemeCategory10);
-
-    const pie = d3.pie()
-      .sort(null)
-      .value(d => d.value);
-   
-    const arcs = pie(data);
-
-    const arc = d3.arc()
-      .innerRadius(40)
-      .outerRadius(fourth)
-      ;
-   
-    const arcLabel = d3.arc()
-      .innerRadius(labelOffset)
-      .outerRadius(labelOffset);
-
-    plotArea.selectAll('path')
-      .data(arcs)
-      .enter()
-      .append('path')
-      .attr('fill', d => color(d.data.key))
-      .attr('stroke', 'white')
-      .attr('d', arc)
-      .on("click", function(d) {
-        var t = d3.select(this);
-        if (t.attr("fill") !== "grey"){
-          t.attr("fill","grey")
-          dim.filter(d.data.key);
-          renderAll(selector);
-        } else {
-          t.attr("fill",d => color(d.data.key));
-          dim.filterAll();
-          renderAll(selector);
-          
-
-      }});
-      
-
-    const labels = plotArea.selectAll('text')
-      .data(arcs)
-      .enter()
-      .append('text')
-      .style('text-anchor', 'middle')
-      .style('alignment-baseline', 'middle')
-      .style('font-size', '12px')
-      .attr('transform', d => `translate(${arcLabel.centroid(d)})`);
-     
-
-    labels.append('tspan')
-      .attr('y', '-0.6em')
-      .attr('x', 0)
-      .style('font-weight', 'bold')
-      .text(d => `${d.data.key}`);
-
-    labels.append('tspan')
-      .attr('y', '0.6em')
-      .attr('x', 0)
-      .text(d => `${formatDollar(d.data.value/1000000)}M (${Math.round(d.data.value / total * 100)}%)`);
-
-    chart.append("text")
-      .attr("x", (w+margin.left+margin.right)/2)            
-      .attr("y", margin.top)
-      .attr("text-anchor", "middle") 
-      .style("font-size", "16px")
-      .text(title)
-
-    // Add one dot in the legend for each name.
-    chart.selectAll("dots")
-    .data(arcs)
-    .enter()
-    .append("circle")
-      .attr("cx", w-margin.right-margin.left-10)
-      .attr("cy", function(d,i){ return h - 82 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
-      .attr("r", 7)
-      .style("fill", d=>color(d.data.key));
-
-    // Add one dot in the legend for each name.
-    chart.selectAll("labels")
-    .data(arcs)
-    .enter()
-    .append("text")
-      .attr("x", w-margin.right-margin.left)
-      .attr("y", function(d,i){ return h - 80 + i*20}) // 100 is where the first dot appears. 25 is the distance between dots
-      .style("fill", d=>color(d.data.key))
-      .text(d=>d.data.key)
-      .attr("text-anchor", "left")
-      .style("font-size", "12px")
-      .style("alignment-baseline", "middle");
-  };
 
 //////////////////////////////////////////////////////////////////////
  
@@ -502,13 +358,22 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}, {...args}={}
     d3.select(selector).selectAll("table").remove();
     //var w = +d3.select(selector).style('width').slice(0, -2);
 
-    var {w=450, rowUrl=null, rowFilter=null} = args;
+    var {w=450, rowUrl=null, rowFilter=null, title=''} = args;
     
 
     var table = d3.select(selector)
       .append("table")
       .style("width", w)
-      .attr("class","agtable");
+      .attr("class","agtable")
+      .style("border", "3px solid black");
+
+   if(title != null) {
+     table.append("caption")
+      .attr("class", "tabletitle")
+      .text(title);
+   };
+
+    
        
     var header = table.append("thead").append("tr");
  
