@@ -173,7 +173,10 @@
                 title2:"Weeks of February 3-July 8, 2020"})};
         function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations", "February 3 - July 13, 2020")};
         function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services", "February 3 - July 13, 2020")};
-        function row4table() {tableAgPlot(".row4table", visnGroup.top(10), labels=['Office','Obligations'], lu=orgs, {"rowFilter":visnDim, title: 'Top Ten Offices'})};
+        function row4table() {tablePlot(".row4table", visnGroup.top(10), ['number','key','value'], 
+            {'lu': {"number":"Number", "key": "Office", "value":"Obligations"}, 
+            "rowFilter":visnDim, 
+            title1:"Top 10 Offices", title2: "February 3 - July 13, 2020"})};
         function row5() {stateMap(".row5", visnGroup.all().filter(d => d.key.startsWith("NCO")))};
         //var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
         //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());

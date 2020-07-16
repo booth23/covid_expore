@@ -221,6 +221,12 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .innerRadius(labelOffset)
     .outerRadius(labelOffset);
 
+  function mouseover(d) {
+      d3.select("#tooltip")
+      .html((d.data.key) + "<br/>"  + formatDollar(d.value) + "<br/>" + Math.round(d.data.value / total * 100) + "%")
+      .attr("class", "tooltip");
+      };
+
   
 
   plotArea.selectAll('path')
@@ -230,6 +236,9 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .attr('fill', d => color(d.data.key))
     .attr('stroke', 'white')
     .attr('d', arc)
+    .on("mouseover", d => mouseover(d))  
+    .on("mousemove", d => mousemove())		
+    .on("mouseout", d => mouseout())
     .on("click", function(d) {
       var t = d3.select(this);
       if (t.attr("fill") !== "grey"){
@@ -259,12 +268,12 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     
     ;
 
-    values.append('tspan')
-    .attr('y', -10)
-    .attr('x', 5)
-    .style('font-weight', 'bold')
-    .style("fill", "white")
-    .text(d => `${Math.round(d.data.value / total * 100)}%`)
+    //values.append('tspan')
+    //.attr('y', -10)
+    //.attr('x', 5)
+    //.style('font-weight', 'bold')
+    //.style("fill", "white")
+    //.text(d => `${Math.round(d.data.value / total * 100)}%`)
     
 
   const labels = plotArea.append("g")
@@ -285,10 +294,10 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .style('font-weight', 'bold')
     .text(d => `${d.data.key}`);
 
-  labels.append('tspan')
-    .attr('y', '0.6em')
-    .attr('x', 0)
-    .text(d => `${formatDollar(d.data.value/1000000)}M`);
+  //labels.append('tspan')
+  //  .attr('y', '0.6em')
+  //  .attr('x', 0)
+  //  .text(d => `${formatDollar(d.data.value/1000000)}M`);
 
 
 
@@ -309,7 +318,7 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
   .data(arcs)
   .enter()
   .append("circle")
-    .attr("cx", w-margin.right-margin.left-10)
+    .attr("cx", w-margin.right-margin.left-30)
     .attr("cy", function(d,i){ return h - 82 + i*20}) 
     .attr("r", 7)
     .style("fill", d=>color(d.data.key));
@@ -319,25 +328,40 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
   .data(arcs)
   .enter()
   .append("text")
-    .attr("x", w-margin.right-margin.left)
+    .attr("x", w-margin.right-margin.left-20)
     .attr("y", function(d,i){ return h - 80 + i*20})
     .style("fill", d=>color(d.data.key))
     .text(d=>d.data.key)
     .attr("text-anchor", "left")
     .style("font-size", "14px")
+    .style('font-weight', 'bold')
     .style("alignment-baseline", "middle");
 };
 
 
   //////////////////////////////////////////////////
-function tablePlot(selector, data, fields, {...args}= {}) {
+function tablePlot(selector, dataraw, fields, {...args}= {}) {
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
 
-    var {lu={}, rowUrl=null, rowFilter=null} = args;
+    var {lu={}, fieldmask={}, rowUrl=null, rowFilter=null, title1="", title2=""} = args;
 
-    var container = d3.select(selector);
+    var data = dataraw.map(function(d,i) {d['number'] = i + 1; return d});
+    
 
+    var container = d3.select(selector)
+      .style("text-align","center");
+
+    container.append("text")
+      .attr("class", "figtitle")
+      .style("display","inline-block")
+      .style("width","100%")
+      .text(title1);
+    container.append("text")
+      .attr("class", "figtitle")
+      .style("display","inline-block")
+      .style("width","100%")
+      .text(title2);
     //var caption = container.append("caption")
     //    .attr("class", "caption")
     //    .text(title);
@@ -353,7 +377,17 @@ function tablePlot(selector, data, fields, {...args}= {}) {
       .enter()
       .append("th")
       .text(d => lu[d])
+      .attr("width", function(d, i) {
+        if(i==0) {
+          return "10%"
+        } else if (i==1) {
+          return "70%"
+        } else {
+          return "20%"
+        }
+      })
       .on("click", d => tablePlot(selector, colSort(data,d), fields, args))
+
     ;
 
     var tablebody = table.append("tbody");
@@ -363,24 +397,7 @@ function tablePlot(selector, data, fields, {...args}= {}) {
       .data(data)
       .enter()
       .append("tr")
-      .on("click", function(d) {
-          if(rowFilter) {
-              t = d3.select(this)
-              if (t.attr("class") == "selected_row"){
-                t.attr("class","")
-                dim.filterAll();
-                
-                renderAll(selector);
-                
-              } else {
-                t.attr("class","selected_row");
-                rowFilter.filter(d.key);
-                renderAll(selector);
-              };
-              
-            };
-          
-          if(rowUrl) {window.open(d[rowUrl])}});
+      ;
 
     var cells = rows.selectAll("td")
       .data(function (row) {
@@ -390,8 +407,8 @@ function tablePlot(selector, data, fields, {...args}= {}) {
         })
         .enter()
         .append("td")
-        .attr('data-th', d=> d.name)
-        .text(d => formatDollar(+d.value || d.value));
+        .attr('data-th', d=> lu[d.name])
+        .text(function(d) { console.log(d); if (d.name=="value") {return formatDollar(+d.value)} else {return d.value}} );
 
 };
 
@@ -441,32 +458,24 @@ function stateMap(selector, data, height=600, width=900) {
 
 
 
-  svg.append("text")
-      .attr("x", (width+margin.left+margin.right)/2)            
-      .attr("y", margin.top)
-      .attr("class","figtitle")
-      .text("VISN Obligations");
 
-
-  svg.append("text")
-      .attr("x", (width+margin.left+margin.right)/2)            
-      .attr("y", margin.top+20)
-      .attr("class","figtitle")
-      .text("February 3 - July 13, 2020");
 
 
   function mouseover(k) {
-        //console.log(args);
-        d3.select("#tooltip")
-        .html(k + "<br/>"  + formatDollar(stLu[k]))
-        .attr("class", "tooltip");
-        };
+        
+    d3.select("#tooltip")
+    //.html(k + "<br/>"  + formatDollar(stLu[k]))
+    .html("<br>"+ formatDollar(stLu[k]))
+    .attr("class", "tooltip");
+    };
 
   var visns = svg
-      .selectAll("path")
+      .selectAll("g")
       .data(fixed.features)
       .enter()
-      .append("path")
+      .append("g");
+  
+  visns.append("path")
       .attr("d", path)
       .attr("fill",d=> color(d.properties.VISN))
       .attr("stroke","black")
@@ -474,11 +483,41 @@ function stateMap(selector, data, height=600, width=900) {
       .on("mouseover", d => mouseover(d.properties.VISN))  
       .on("mousemove", d => mousemove())		
       .on("mouseout", d => mouseout())
-      
-      //.append("title")
-      //.text(d => 'NCO ' + d.properties.VISN + " - " + formatDollar(stLu['NCO ' + d.properties.VISN]))
       ;
 
+  function vpos(d) {
+    v = d.properties.VISN;
+    if (v=="NCO 20") { return ["159","145"]}
+    else if (v=="NCO 01") { return ["820","160"]}
+    else {return path.centroid(d)}
+    };
+
+  // Append VISN names  
+  visns.append("text")
+      .text(function(d){
+          return d.properties.VISN;
+      })
+      .attr("x", d => vpos(d)[0])
+      .attr("y", d => vpos(d)[1])
+      .attr("text-anchor","middle")
+      .attr('font-size','12pt');
+
+  // Append Title 1
+    svg.append("g")
+    .append("text")
+    .attr("x", (width+margin.left+margin.right)/2)            
+    .attr("y", margin.top)
+    .attr("class","figtitle")
+    .text("VISN Obligations");
+
+  // Append Title 2
+  svg.append("g")
+      .append("text")
+      .attr("x", (width+margin.left+margin.right)/2)            
+      .attr("y", margin.top+20)
+      .attr("class","figtitle")
+      .text("February 3 - July 13, 2020");
+    
 
 
   };

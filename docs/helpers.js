@@ -353,13 +353,16 @@ function plotCard(selector, val, title) {
 
 //////////////////////////////////////////////////////////////////////
  
-function tableAgPlot(selector, data, labels=['Key','Value'], lu={}, {...args}={}) {
+function tableAgPlot(selector, dataraw, labels=['Number','Key','Value'], lu={}, {...args}={}) {
 
     d3.select(selector).selectAll("table").remove();
     //var w = +d3.select(selector).style('width').slice(0, -2);
 
-    var {w=450, rowUrl=null, rowFilter=null, title=''} = args;
-    
+    var {w=500, rowUrl=null, rowFilter=null, title=''} = args;
+
+    var data = dataraw.map(function(d,i) {d['Number'] = '' + i + 1; return d});
+
+  
 
     var table = d3.select(selector)
       .append("table")
@@ -384,9 +387,11 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}, {...args}={}
       .append("th")
       .attr("width", function(d, i) {
         if(i==0) {
+          return "10%"
+        } else if (i==1) {
           return "70%"
         } else {
-          return "30%"
+          return "20%"
         }
       })
       .text(function(d) { return d; });
@@ -418,10 +423,11 @@ function tableAgPlot(selector, data, labels=['Key','Value'], lu={}, {...args}={}
         if(rowUrl) {window.open(d[rowUrl])}});
 
     var cells = rows.selectAll("td")
-        .data(d => Object.values(d))
+        //.data(d => Object.values(d))
+        .datum(d => d)
         .enter()
         .append("td")
-        //.attr('data-th', d=>lu[d.key] || d.key)
+        .attr('data-th', d=>console.log(d))
         .text(d=>lu[d] || formatDollar(d));
 
   };

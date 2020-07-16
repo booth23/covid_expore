@@ -161,8 +161,6 @@ h1, h2 {
 .table {
     text-align: left;
     display: block;
-    overflow: auto;
-    height: 400;
     border-collapse: collapse;
     margin: 25px 0;
     font-size: 0.9rem;
@@ -170,7 +168,19 @@ h1, h2 {
     border-radius: 5px;
 
 }
+/*
+.agtable {
+    counter-reset: rowNumber;
+  }
 
+.agtable tbody tr::before {
+    display: table-cell;
+    counter-increment: rowNumber;
+    content: counter(rowNumber);
+    padding-right: 10px;
+    text-align: left;
+  }
+*/
 .agtable {
     text-align: left;
     border-collapse: collapse;
