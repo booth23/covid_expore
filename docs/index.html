@@ -156,17 +156,7 @@
 
         var margin = {top: 30, right: 20, bottom: 20, left: 20};
 
-        //tableAgPlot("#box4", deptGroup.top(10), ['Department','Obligations'], orgs);
-        //barPlot("#box1", deptGroup);
-        
-        //plotCard('.r1c1',totalobs(),'Total Obligations');
 
-
-
-        //var r1c1 = plotCard.bind(null, ".r1c1", totalobs(), "Total Obligations");
-        //function r1c1 = plotTotalObs.bind(null);
-        //var r1c2 = hbarPlot.bind(null,".r1c2",reorder(monthGroup.all(), Object.values(months)),"", monthDim);
-        //function row1() {plotTotalObs(".row1")}
         function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), weeklyDim, 
             {h:300, 
                 title1:"Total Action Obligations by Week", 
@@ -178,16 +168,7 @@
             "rowFilter":visnDim, 
             title1:"Top 10 Offices", title2: "February 3 - July 13, 2020"})};
         function row5() {stateMap(".row5", visnGroup.all().filter(d => d.key.startsWith("NCO")))};
-        //var r1c3 = pieChart.bind(null,".r1c3",compGroup.all(), compDim);
-        //var box3 = bubblePlot.bind(null, "#box3",deptGroup.all());
-        //function row4() {plotTreemap("#box3",visnGroup.top(10), visnDim, "Obligations by Office")};
-        //var box4 = linePlot.bind(null, "#box4",weeklyGroup.all());
-        //function box4() {stateMap(".box4",[us], stateGroup.all())};
-        //var b5a = tablePlot.bind(null, ".b5a", pscGroup.top(10), "value"), ["key","value"])
-        //function b5a() {tableAgPlot(".b5a", pscGroup.top(10), labels=['Product/Service','Obligations'], lu=codes, {"rowFilter":pscDim})};
-        //function b5b() {tableAgPlot(".b5b", vendorGroup.top(10), labels=['Contractor','Obligations'])};
-        //function b3() {tablePlot(".b3", colSort(dailyDim.top(Infinity), "covidAmount"), ["PIID","competed","coSizeDetermination","contractPricing","covidAmount"], 
-        //    {"lu": colLu, "rowUrl": "k_url"});};
+
 
         var colLu = {"PIID": "Contract", 
                     "competed": "Competition", 
@@ -207,12 +188,7 @@
         renderAll();
 
         
-        
 
-    
-        //linePlot("#box3",weeklyGroup.all());
-        //bubblePlot("#box3",deptGroup.all());
-        //plotTreemap("#box3",deptGroup.all());
 
 
     
