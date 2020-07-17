@@ -1,4 +1,23 @@
 
+function filters(){
+    fs = [];
+    //compDim.hasCurrentFilter() ? fs.push('Competition') : null;
+    //visnDim.hasCurrentFilter() ? fs.push('Office') : null;
+    //monthDim.hasCurrentFilter() ? fs.push('Month') : null;
+    //weeklyDim.hasCurrentFilter() ? fs.push('Week') : null;
+    //pvsDim.hasCurrentFilter() ? fs.push('Product/Service') : null;
+
+    compDim.hasCurrentFilter() ? fs.push(compDim.currentFilter()) : null;
+    visnDim.hasCurrentFilter() ? fs.push(visnDim.currentFilter()) : null;
+    monthDim.hasCurrentFilter() ? fs.push(monthDim.currentFilter()) : null;
+    weeklyDim.hasCurrentFilter() ? fs.push(weeklyDim.currentFilter()) : null;
+    pvsDim.hasCurrentFilter() ? fs.push(pvsDim.currentFilter()) : null;
+
+    return fs.join(", ");
+
+  };
+
+
   function mousemove(selection="#tooltip") {
     var t = d3.event.pageY || 0;
     var l = d3.event.pageX + 5 || 0;
@@ -107,10 +126,11 @@ function wrap(text, width) {
         word,
         line = [],
         lineNumber = 0,
-        lineHeight = 1.1, // ems
+        lineHeight = 1, // ems
         y = text.attr("y"),
-        dy = parseFloat(text.attr("dy")),
-        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+        x = text.attr("x"),
+        tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
+    console.log('x:' + x + 'y: ' + y);
     while (word = words.pop()) {
       line.push(word);
       tspan.text(line.join(" "));
@@ -118,7 +138,7 @@ function wrap(text, width) {
         line.pop();
         tspan.text(line.join(" "));
         line = [word];
-        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+        tspan = text.append("tspan").attr("x", x).attr("y", y + lineNumber*10).text(word);
       }
     }
   });
@@ -143,8 +163,7 @@ function scale (scaleFactor) {
 
 
 function totalobs(){
-  //return formatDollar(d3.sum(compGroup.all().map(d=>d.value)));
-  return formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value());
+  return formatDollar(ndx.groupAll().reduceSum(d=>d.amt).value());
 };
 
 function plotTotalObs(selector) {

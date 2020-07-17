@@ -23,16 +23,18 @@
     
 
     <!--
-        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
        <script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter2/1.5.2/crossfilter.min.js"></script>
+       
         
 
 -->
 
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
+
 <script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter2/1.5.2/crossfilter.min.js"></script>
 
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://d3js.org/topojson.v2.min.js"></script>
@@ -132,27 +134,20 @@
         
         
         var compDim = ndx.dimension(d=>d.competed || "NA");
-        var compGroup = compDim.group().reduceSum(d=>d.obligatedAmount);
+        var compGroup = compDim.group().reduceSum(d=>d.amt);
 
-        var visnDim = ndx.dimension(d=>orgs[d.contractingofficeid] || "NA");
-        var visnGroup = visnDim.group().reduceSum(d=>d.obligatedAmount);
+        var visnDim = ndx.dimension(d=>orgs[d.officeid] || "NA");
+        var visnGroup = visnDim.group().reduceSum(d=>d.amt);
 
-        var monthDim = ndx.dimension(d => months[d.signedDate.substr(5,2)]);
-        var monthGroup = monthDim.group().reduceSum(d=>d.obligatedAmount);
+        var monthDim = ndx.dimension(d => months[d.date.substr(5,2)]);
+        var monthGroup = monthDim.group().reduceSum(d=>d.amt);
 
-        var weeklyDim = ndx.dimension(d => getMonday(d.signedDate));
-        var weeklyGroup = weeklyDim.group().reduceSum(d=>d.obligatedAmount);
-
-        var stateDim = ndx.dimension(d => d.placeOfPerformanceState);
-        var stateGroup = stateDim.group().reduceSum(d=>d.obligatedAmount);
-
-        var pvsDim = ndx.dimension(d => d.productOrService);
-        var pvsGroup = pvsDim.group().reduceSum(d=>d.obligatedAmount);
+        var weeklyDim = ndx.dimension(d => getMonday(d.date));
+        var weeklyGroup = weeklyDim.group().reduceSum(d=>d.amt);
 
 
-        var pscDim = ndx.dimension(d => d.productOrServiceCode);
-        var pscGroup = pscDim.group().reduceSum(d=>d.obligatedAmount);
-
+        var pvsDim = ndx.dimension(d => d.pvs);
+        var pvsGroup = pvsDim.group().reduceSum(d=>d.amt);
 
 
         var margin = {top: 30, right: 20, bottom: 20, left: 20};

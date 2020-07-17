@@ -13,7 +13,7 @@ function barPlot({...vals}={}) {
         title = ''} = vals;
 
     var width = w + margin.right + margin.left + xspace + 20;
-    var height = h + margin.top + margin.bottom + titlespace + 10;
+    var height = h + margin.top + margin.bottom + titlespace + 40;
 
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
@@ -44,6 +44,14 @@ function barPlot({...vals}={}) {
     var chart = svg.append("g")
             .attr("transform", "translate(" + (margin.left + xspace) + "," + (margin.top + titlespace) + ")")
             ;
+
+    function color1(d) {
+      if (dim.currentFilter() == d) {
+        return "gray";
+      } else {
+        return "steelblue";
+      };
+    };
   
     // add rectangles for each category
     var bars = chart.selectAll("rect")
@@ -54,22 +62,21 @@ function barPlot({...vals}={}) {
         .attr("width",xscale.bandwidth())
         .attr("x", d=>xscale(d.key))
         .attr("y", d=>yscale(Math.max(d.value, 0)))
-        .attr("fill", "steelblue")
+        .attr("fill", d => color1(d.key))
         .attr("margin", "3px")
         .on("mouseover", d => mouseover(d, {'labels':orgs}))  
         .on("mousemove", d => mousemove())		
         .on("mouseout", d => mouseout())
         .on("click", function(d) {
-            var t = d3.select(this);
-            if (t.attr("fill") == "steelblue"){
-              t.attr("fill","grey")
+            if (dim.currentFilter() !== d.key){
+              
               dim.filter(d.key);
-              renderAll(selector);
+              renderAll();
               
             } else {
-              t.attr("fill","steelblue");
+              
               dim.filterAll();
-              renderAll(selector);
+              renderAll();
             };
             
           })
@@ -109,12 +116,21 @@ function barPlot({...vals}={}) {
         .text(title)
         ;
 
+    if (filters().length > 0) {       
+          svg.append("text")
+            .attr("x", margin.right)
+            .attr("y", height-margin.bottom)
+            .style("font-size", "12px")
+            .text("Filtered by " + filters())
+            ;
+    };
+
 
 
     var periods = ["Weekly","Monthly"];
 
 
-    var totalvals = ["Total:", formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value())];
+    var totalvals = ["Total:", formatDollar(ndx.groupAll().reduceSum(d=>d.amt).value())];
     
 
     var total = svg.append("g")
@@ -231,13 +247,20 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
       .attr("class", "tooltip");
       };
 
+  function color1(d) {
+    if (dim.currentFilter() == d) {
+      return "gray";
+    } else {
+      return color(d);
+    }
+  };
   
 
   plotArea.selectAll('path')
     .data(arcs)
     .enter()
     .append('path')
-    .attr('fill', d => color(d.data.key))
+    .attr('fill', d => color1(d.data.key))
     .attr('stroke', 'white')
     .attr('d', arc)
     .on("mouseover", d => mouseover(d))  
@@ -245,14 +268,14 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .on("mouseout", d => mouseout())
     .on("click", function(d) {
       var t = d3.select(this);
-      if (t.attr("fill") !== "grey"){
-        t.attr("fill","grey")
+      if (dim.currentFilter() !== d.data.key){
+
         dim.filter(d.data.key);
-        renderAll(selector);
+        renderAll();
       } else {
-        t.attr("fill",d => color(d.data.key));
+        //t.attr("fill",d => color(d.data.key));
         dim.filterAll();
-        renderAll(selector);
+        renderAll();
         
 
     }});
@@ -300,6 +323,14 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .style("font-size", "14px")
     .style('font-weight', 'bold')
     .style("alignment-baseline", "middle");
+
+  if (filters().length > 0) {
+    chart.append("text")
+      .attr("x", margin.right)
+      .attr("y", h-margin.bottom)
+      .style("font-size","12px")
+      .text("Filtered by " + filters());
+  };
 };
 
 
@@ -309,9 +340,15 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
     d3.select(selector).selectAll("table").remove();
     d3.select(selector).selectAll("text").remove();
 
-    var {lu={}, fieldmask={}, rowUrl=null, rowFilter=null, title1="", title2=""} = args;
+    var {lu={}, fieldmask={}, rowUrl=null, rowFilter=null, title1=""} = args;
 
-    var data = dataraw.map(function(d,i) {d['number'] = i + 1; return d});
+    if (visnDim.currentFilter()) {
+      var data = visnGroup.all().filter(d => d.key == visnDim.currentFilter()).map(function(d,i) {d['number'] = i + 1; return d});
+    } else {
+      var data = dataraw.map(function(d,i) {d['number'] = i + 1; return d});
+    };
+
+    
     
 
     var container = d3.select(selector)
@@ -322,11 +359,6 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
       .style("display","inline-block")
       .style("width","100%")
       .text(title1);
-    container.append("text")
-      .attr("class", "figtitle")
-      .style("display","inline-block")
-      .style("width","100%")
-      .text(title2);
 
     var table = container.append("table")
       .attr("class","table");
@@ -352,6 +384,18 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
 
     ;
 
+    if (filters().length > 0) {
+      var tfoot = table.append("tfoot");
+
+      tfoot.append("td");
+
+      tfoot.append("td")
+        .attr("colspan",0)
+        .text("Filtered by " + filters());
+      
+    };
+
+
     var tablebody = table.append("tbody");
 
     rows = tablebody
@@ -359,7 +403,21 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
       .data(data)
       .enter()
       .append("tr")
-      ;
+      .on("click", function(d) {
+        t = d3.select(this)
+        if(visnDim.currentFilter()==d.key) {        
+            t.attr("class","")
+            visnDim.filterAll();  
+            renderAll();
+              
+            } else {
+              t.attr("class","selected_row");
+              visnDim.filter(d.key);
+              renderAll();
+            };
+            
+        });
+      
 
     var cells = rows.selectAll("td")
       .data(function (row) {
@@ -410,6 +468,14 @@ function stateMap(selector, dataraw, height=600, width=900) {
       .domain(visnlist)
       .range(scheme)
       ;
+
+  function color1(d) {
+    if (visnDim.currentFilter() == d) {
+      return "white";
+    } else {
+      return color(d)
+    };
+  };
   
   var svg = d3.select(selector)
       .append("svg")
@@ -434,23 +500,27 @@ function stateMap(selector, dataraw, height=600, width=900) {
   
   visns.append("path")
       .attr("d", path)
-      .attr("fill",d=> color(d.properties.VISN))
+      .attr("fill",d=> color1(d.properties.VISN))
       .attr("stroke","black")
       .attr("id",d=>d.properties.VISN)
       .on("mouseover", d => mouseover(d.properties.VISN))  
       .on("mousemove", d => mousemove())		
       .on("mouseout", d => mouseout())
       .on("click", function(d) {
-        var t = d3.select(this);
-        if (t.attr("fill") !== "white"){
-        t.attr("fill","white")
-        visnDim.filter(d.properties.VISN);
-        renderAll(selector);
+        var k = d.properties.VISN;
+        var f = visnDim.currentFilter();
+
+        if (k==f){
+          visnDim.filterAll();
+        
       } else {
-        t.attr("fill",d => color(d.properties.VISN));
-        visnDim.filterAll();
-        renderAll(selector);
-      }})
+        
+        visnDim.filter(d.properties.VISN);
+        
+      }
+      renderAll();
+      })
+
       ;
 
   function vpos(d) {
@@ -491,14 +561,13 @@ function stateMap(selector, dataraw, height=600, width=900) {
     //.attr("class","figtitle")
     .text("NCO 19");
 
-  // Append Title 2
-  //svg.append("g")
-  //    .append("text")
-  //    .attr("x", (width+margin.left+margin.right)/2)            
-  //    .attr("y", margin.top+20)
-  //    .attr("class","figtitle")
-  //    ;
-    
+    if (filters().length > 0) {
+      svg.append("text")
+        .attr("x", width - 200)
+        .attr("y", height-15)
+        .style("font-size","12px")
+        .text("Filtered by " + filters());
+    };
 
 
   };
