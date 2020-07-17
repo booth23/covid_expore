@@ -161,8 +161,8 @@
         //function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), weeklyDim, 
         //    {h:300, title:"Total Action Obligations by Week"})};
         function row1() {barPlot(row1_params)};
-        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations")};
-        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services")};
+        function row2() {pieChart(".row2",compGroup.all(), compDim, "Total Obligations for Competed vs Not Competed Actions")};
+        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Total Obligations for Products vs Services")};
         function row4table() {tablePlot(".row4table", visnGroup.top(10), ['number','key','value'], 
             {'lu': {"number":"Number", "key": "Office", "value":"Obligations"}, 
             "rowFilter":visnDim, 
