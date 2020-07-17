@@ -94,10 +94,65 @@ function renderAll(skip=null) {
   });
 }
 
+function cleanDept(dept) {
+  if(dept) {
+    return dept.split(",")[0];
+  };
+};
+
+function wrap(text, width) {
+  text.each(function() {
+    var text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")),
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  });
+};
+
+function formatDollar(val) {
+  if (typeof val == 'number') {
+    return '$' + val.toFixed(0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
+  else {
+    return val;
+  }
+}
+
+function scale (scaleFactor) {
+  return d3.geoTransform({
+      point: function(x, y) {
+          this.stream.point(x * scaleFactor, y  * scaleFactor);
+      }
+  });
+};
 
 
+function totalobs(){
+  //return formatDollar(d3.sum(compGroup.all().map(d=>d.value)));
+  return formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value());
+};
 
-
+function plotTotalObs(selector) {
+  var val = totalobs();
+  d3.select(selector)
+    .html("<b>Total Obligations</b><br>"+val);
+ 
+}
 
 
 
@@ -239,68 +294,7 @@ function plotTreemap(selector, data, dim, caption='', pg=pg1, width=1000, height
 
 };
 
-function cleanDept(dept) {
-  if(dept) {
-    return dept.split(",")[0];
-  };
-};
 
-function wrap(text, width) {
-  text.each(function() {
-    var text = d3.select(this),
-        words = text.text().split(/\s+/).reverse(),
-        word,
-        line = [],
-        lineNumber = 0,
-        lineHeight = 1.1, // ems
-        y = text.attr("y"),
-        dy = parseFloat(text.attr("dy")),
-        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-    while (word = words.pop()) {
-      line.push(word);
-      tspan.text(line.join(" "));
-      if (tspan.node().getComputedTextLength() > width) {
-        line.pop();
-        tspan.text(line.join(" "));
-        line = [word];
-        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-      }
-    }
-  });
-};
-
-function formatDollar(val) {
-  if (typeof val == 'number') {
-    return '$' + val.toFixed(0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
-  }
-  else {
-    return val;
-  }
-}
-
-function scale (scaleFactor) {
-  return d3.geoTransform({
-      point: function(x, y) {
-          this.stream.point(x * scaleFactor, y  * scaleFactor);
-      }
-  });
-};
-
-
-
-
-
-function totalobs(){
-  //return formatDollar(d3.sum(compGroup.all().map(d=>d.value)));
-  return formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value());
-};
-
-function plotTotalObs(selector) {
-  var val = totalobs();
-  d3.select(selector)
-    .html("<b>Total Obligations</b><br>"+val);
- 
-}
 
 ///////////////////////////////////////////////////
 
@@ -460,7 +454,7 @@ function getMonday(d) {
   var curr_date = monday.getDate();
   var curr_month = monday.getMonth();
   var curr_year = monday.getFullYear();
-  return  "Wk of " + m_names[curr_month] + " " + curr_date;
+  return  "Week of " + m_names[curr_month] + " " + curr_date;
 }
 
 

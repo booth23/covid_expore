@@ -461,6 +461,7 @@ function stateMap(selector, dataraw, height=600, width=900) {
     else if (v=="NCO 05") { return ["738","271"]}
     else if (v=="NCO 08") { return ["770","468"]}
     else if (v=="NCO 10") { return ["660","250"]}
+    else if (v=="NCO 12") { return ["592","200"]}
     else {return path.centroid(d)}
     };
 
