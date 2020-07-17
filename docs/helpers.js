@@ -1,9 +1,9 @@
 
   function mousemove(selection="#tooltip") {
     var t = d3.event.pageY || 0;
-    var l = d3.event.pageX || 0;
+    var l = d3.event.pageX + 5 || 0;
     d3.select(selection)
-      .style("top", (t - 60) + "px")
+      .style("top", (t - 65) + "px")
       .style("left", l + "px")
       ;
     

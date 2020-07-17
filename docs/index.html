@@ -117,7 +117,7 @@
         width = 750;
         height = 600;
 
-        var margin = {top: 20, right: 10, bottom: 30, left: 20};
+        var margin = {top: 20, right: 20, bottom: 30, left: 20};
         w = width-margin.left-margin.right;
         h = height-margin.top-margin.bottom;
 
@@ -156,18 +156,23 @@
 
         var margin = {top: 30, right: 20, bottom: 20, left: 20};
 
+        var row1_params = {selector: ".row1",
+                            data: weeklyGroup.all().sort(sortWeek),
+                            dim: weeklyDim,
+                            h: 300,
+                            title: "Total Action Obligations by Week"};
 
-        function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), weeklyDim, 
-            {h:300, 
-                title1:"Total Action Obligations by Week", 
-                title2:"Weeks of February 3-July 8, 2020"})};
-        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations", "February 3 - July 13, 2020")};
-        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services", "February 3 - July 13, 2020")};
+
+        //function row1() {barPlot(".row1", weeklyGroup.all().sort(sortWeek), weeklyDim, 
+        //    {h:300, title:"Total Action Obligations by Week"})};
+        function row1() {barPlot(row1_params)};
+        function row2() {pieChart(".row2",compGroup.all(), compDim, "Competed vs Not Competed Obligations")};
+        function row3() {pieChart(".row3",pvsGroup.all(), pvsDim, "Obligations for Products vs Services")};
         function row4table() {tablePlot(".row4table", visnGroup.top(10), ['number','key','value'], 
             {'lu': {"number":"Number", "key": "Office", "value":"Obligations"}, 
             "rowFilter":visnDim, 
-            title1:"Top 10 Offices", title2: "February 3 - July 13, 2020"})};
-        function row5() {stateMap(".row5", visnGroup.all().filter(d => d.key.startsWith("NCO")))};
+            title1:"Top 10 Offices"})};
+        function row5() {stateMap(".row5", visnGroup.all())};
 
 
         var colLu = {"PIID": "Contract", 

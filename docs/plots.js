@@ -1,14 +1,18 @@
-function barPlot(selector, data, dim, {...vals}={}) {
+//function barPlot(selector, data, dim, {...vals}={}) {
+
+function barPlot({...vals}={}) {
 
 
-    var {xspace = 200, 
+    var {selector, 
+        data, 
+        dim,
+        xspace = 200, 
         w=500, 
         h=500, 
         titlespace=50,
-        title1 = '',
-        title2 = ''} = vals;
+        title = ''} = vals;
 
-    var width = w + margin.right + margin.left + xspace;
+    var width = w + margin.right + margin.left + xspace + 20;
     var height = h + margin.top + margin.bottom + titlespace + 10;
 
     d3.select(selector).selectAll("svg").remove();
@@ -82,8 +86,7 @@ function barPlot(selector, data, dim, {...vals}={}) {
             .attr("transform", "translate(" + (0) + "," + h + ")")
             .attr("class", "axis")
             .call(d3.axisBottom(xscale)
-                //.ticks(8)
-                .tickValues(xscale.domain().filter(function(d,i){ return !(i%3)})))
+                .tickValues(xscale.domain().filter(function(d,i){ return !(i%4)})))
                 ;
     };
 
@@ -103,21 +106,14 @@ function barPlot(selector, data, dim, {...vals}={}) {
         .attr("x", width/2)             
         .attr("y", margin.top)
         .attr("class", "figtitle")
-        .text(title1)
+        .text(title)
         ;
 
-    svg.append("text")
-        .attr("x", width/2)             
-        .attr("y", margin.top + 20)
-        .attr("class", "figtitle")
-        .text(title2)
-        ;
 
 
     var periods = ["Weekly","Monthly"];
 
-    
-    //var totalvals = ["Total:", formatDollar(d3.sum(data,d => d.value))];
+
     var totalvals = ["Total:", formatDollar(ndx.groupAll().reduceSum(d=>d.obligatedAmount).value())];
     
 
@@ -130,7 +126,7 @@ function barPlot(selector, data, dim, {...vals}={}) {
       .append("text")
       .attr("x", 0)
       .attr("y", d => totalvals.indexOf(d)*25)
-      .style('fill', 'steelblue')
+      .style('fill', 'black')
       .style("font-size", "16px")
       .style("font-weight", "bold")
       .text(d=>d);
@@ -138,6 +134,7 @@ function barPlot(selector, data, dim, {...vals}={}) {
       var menu = svg.append("g")
       .attr("transform", d => "translate(" + margin.left + "," + (margin.top + titlespace + 75) + ")");
 
+      
 
     menu.selectAll("rect")
         .data(periods)
@@ -149,12 +146,19 @@ function barPlot(selector, data, dim, {...vals}={}) {
         .style("fill", "steelblue")
         .style("border-radius","5px")
         .on("click", function(d){
+            
             if (d=="Weekly") {
-                barPlot(selector, weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, vals);
+                row1_params['data'] = weeklyGroup.all().sort(sortWeek);
+                row1_params['title'] = "Obligations by Week";
+                row1_params['dim'] = weeklyDim;
+                //barPlot(selector, weeklyGroup.all().sort(sortWeek), "Obligations by Week", weeklyDim, vals);
             } else {
-                //barPlot(selector, reorder(monthGroup.all(), Object.values(months)), vals);
-                barPlot(selector, monthGroup.all().sort(sortMonth), "Obligations by Month", monthDim, vals);
-            }
+                row1_params['data'] = monthGroup.all().sort(sortMonth);
+                row1_params['title'] = "Obligations by Month"
+                row1_params['dim'] = monthDim
+                
+            };
+            barPlot(row1_params);
         })
         ;
 
@@ -184,9 +188,9 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
   w = 400;
   h = 400;
   var size = w * .9;
-  var fourth = w / 4;
+  var fourth = w / 3;
   var half = w / 2;
-  var labelOffset = fourth * 1.4;
+  var labelOffset = fourth * 1.2;
   var total = data.reduce((acc, cur) => acc + cur.value, 0);
   
  
@@ -265,53 +269,13 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
     .style('text-anchor', 'middle')
     .style('alignment-baseline', 'middle')
     .attr('transform', d => `translate(${arcValue.centroid(d)})`)
-    
     ;
-
-    //values.append('tspan')
-    //.attr('y', -10)
-    //.attr('x', 5)
-    //.style('font-weight', 'bold')
-    //.style("fill", "white")
-    //.text(d => `${Math.round(d.data.value / total * 100)}%`)
-    
-
-  const labels = plotArea.append("g")
-    .selectAll('text')
-    .data(arcs)
-    .enter()
-    .append('text')
-    .attr("class", "axis")
-    .style('text-anchor', 'middle')
-    .style("font-size", "14px")
-    .style('alignment-baseline', 'middle')
-    .attr('transform', d => `translate(${arcLabel.centroid(d)})`);
-   
-
-  labels.append('tspan')
-    .attr('y', '-0.6em')
-    .attr('x', 0)
-    .style('font-weight', 'bold')
-    .text(d => `${d.data.key}`);
-
-  //labels.append('tspan')
-  //  .attr('y', '0.6em')
-  //  .attr('x', 0)
-  //  .text(d => `${formatDollar(d.data.value/1000000)}M`);
-
-
 
   chart.append("text")
     .attr("x", (w+margin.left+margin.right)/2)            
     .attr("y", margin.top)
     .attr("class","figtitle")
     .text(title1);
-
-  chart.append("text")
-    .attr("x", (w+margin.left+margin.right)/2)            
-    .attr("y", margin.top+20)
-    .attr("class","figtitle")
-    .text(title2);
 
   
   chart.selectAll("dots")
@@ -343,6 +307,7 @@ function pieChart (selector, dataraw, dim, title1="", title2="") {
 function tablePlot(selector, dataraw, fields, {...args}= {}) {
     d3.select(selector).selectAll("svg").remove();
     d3.select(selector).selectAll("table").remove();
+    d3.select(selector).selectAll("text").remove();
 
     var {lu={}, fieldmask={}, rowUrl=null, rowFilter=null, title1="", title2=""} = args;
 
@@ -362,9 +327,6 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
       .style("display","inline-block")
       .style("width","100%")
       .text(title2);
-    //var caption = container.append("caption")
-    //    .attr("class", "caption")
-    //    .text(title);
 
     var table = container.append("table")
       .attr("class","table");
@@ -408,16 +370,18 @@ function tablePlot(selector, dataraw, fields, {...args}= {}) {
         .enter()
         .append("td")
         .attr('data-th', d=> lu[d.name])
-        .text(function(d) { console.log(d); if (d.name=="value") {return formatDollar(+d.value)} else {return d.value}} );
+        .text(function(d) { if (d.name=="value") {return formatDollar(+d.value)} else {return d.value}} );
 
 };
 
 
 
 /////////////////////     VISN Map    /////////////////////
-function stateMap(selector, data, height=600, width=900) {
+function stateMap(selector, dataraw, height=600, width=900) {
 
   d3.select(selector).selectAll("svg").remove();
+
+  var data = dataraw.filter(d => d.key.startsWith("NCO"));
 
 
   var features = visn.features;
@@ -427,26 +391,24 @@ function stateMap(selector, data, height=600, width=900) {
     return turf.rewind(feature,{reverse:true});
   });
 
-
-    
-
   var projection = d3.geoAlbersUsa().fitExtent([[25,25],[width-25,height-25]], fixed);
 
   var path = d3.geoPath()
     .projection(projection)
   ;
-
+  
+  var scheme = ["#FCFF33", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", 
+        "#e377c2", "#7f7f7f", "#bcbd22", "#17becf", "#7fc97f", "#beaed4", "#fdc086", 
+        "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#666666", "#1b9e77", "#d95f02", 
+        "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
 
   var stLu = arrayToObject(data);
-  
 
   var visnlist = data.map(d=>d.key);
 
-    
-  
   var color = d3.scaleOrdinal()
       .domain(visnlist)
-      .range(d3.schemeCategory10.concat(d3.schemeAccent, d3.schemeDark2))
+      .range(scheme)
       ;
   
   var svg = d3.select(selector)
@@ -457,14 +419,9 @@ function stateMap(selector, data, height=600, width=900) {
       ;
 
 
-
-
-
-
   function mouseover(k) {
         
     d3.select("#tooltip")
-    //.html(k + "<br/>"  + formatDollar(stLu[k]))
     .html("<br>"+ formatDollar(stLu[k]))
     .attr("class", "tooltip");
     };
@@ -483,12 +440,27 @@ function stateMap(selector, data, height=600, width=900) {
       .on("mouseover", d => mouseover(d.properties.VISN))  
       .on("mousemove", d => mousemove())		
       .on("mouseout", d => mouseout())
+      .on("click", function(d) {
+        var t = d3.select(this);
+        if (t.attr("fill") !== "white"){
+        t.attr("fill","white")
+        visnDim.filter(d.properties.VISN);
+        renderAll(selector);
+      } else {
+        t.attr("fill",d => color(d.properties.VISN));
+        visnDim.filterAll();
+        renderAll(selector);
+      }})
       ;
 
   function vpos(d) {
     v = d.properties.VISN;
     if (v=="NCO 20") { return ["159","145"]}
-    else if (v=="NCO 01") { return ["820","160"]}
+    else if (v=="NCO 01") { return ["870","165"]}
+    else if (v=="NCO 02") { return ["770","195"]}
+    else if (v=="NCO 05") { return ["738","271"]}
+    else if (v=="NCO 08") { return ["770","468"]}
+    else if (v=="NCO 10") { return ["660","250"]}
     else {return path.centroid(d)}
     };
 
@@ -508,15 +480,23 @@ function stateMap(selector, data, height=600, width=900) {
     .attr("x", (width+margin.left+margin.right)/2)            
     .attr("y", margin.top)
     .attr("class","figtitle")
-    .text("VISN Obligations");
+    .text("NCO Obligations");
+
+
+    svg.append("g")
+    .append("text")
+    .attr("x", 445)            
+    .attr("y", 360)
+    //.attr("class","figtitle")
+    .text("NCO 19");
 
   // Append Title 2
-  svg.append("g")
-      .append("text")
-      .attr("x", (width+margin.left+margin.right)/2)            
-      .attr("y", margin.top+20)
-      .attr("class","figtitle")
-      .text("February 3 - July 13, 2020");
+  //svg.append("g")
+  //    .append("text")
+  //    .attr("x", (width+margin.left+margin.right)/2)            
+  //    .attr("y", margin.top+20)
+  //    .attr("class","figtitle")
+  //    ;
     
 
 
