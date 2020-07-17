@@ -24,10 +24,10 @@ function mouseover(d, {...args}={}) {
   .attr("class", "tooltip");
   };
 
-//"Wk of Apr 13"
+//"Week of Apr 13"
 function weekDate(dt) {
-  var mo = dt.slice(6,9); 
-  var dy = +dt.slice(10,12);
+  var mo = dt.slice(8,11); 
+  var dy = +dt.slice(12,14);
   return new Date(2020, mos.indexOf(mo), dy);
 }
 
