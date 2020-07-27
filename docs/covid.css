@@ -179,19 +179,7 @@ h1, h2 {
     border-radius: 5px;
 
 }
-/*
-.agtable {
-    counter-reset: rowNumber;
-  }
 
-.agtable tbody tr::before {
-    display: table-cell;
-    counter-increment: rowNumber;
-    content: counter(rowNumber);
-    padding-right: 10px;
-    text-align: left;
-  }
-*/
 .agtable {
     text-align: left;
     border-collapse: collapse;
@@ -226,7 +214,7 @@ h1, h2 {
 
 .table tbody tr:nth-of-type(even), 
 .agtable tbody tr:nth-of-type(even) {
-    background-color: #f3f3f3;
+    background-color: white;
 }
 
 .table thead th, 
