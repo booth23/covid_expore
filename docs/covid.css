@@ -4,6 +4,7 @@ body {
   }
   
 .wrapper {
+    position: absolute;
     display: grid;
     grid-column-gap: 20px;
     grid-row-gap: 50px;
@@ -22,14 +23,24 @@ body {
     color: #fff;
     background-color: #4682b4;
     height: 100px;
-    width: 100%;
+    width: 50vw;
 }
+
+.draft {
+    text-align: center;
+    color: black;
+    font-weight: bold;
+    font-size: 30px;
+    height: 30px;
+    width: 50vw;
+}
+
 
 h1, h2 {
     margin: 0;
 }
 
-.header, .row1, .row2, .row3, .row5, .row {
+.header, .row1, .row2, .row3, .row5, .row, .draft {
     grid-column: 2 / 3;
     align-self: center;
 }
